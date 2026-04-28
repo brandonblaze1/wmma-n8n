@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-27T21:08:34.080Z",
+  "updatedAt": "2026-04-28T14:03:21.408Z",
   "createdAt": "2026-04-22T15:35:22.825Z",
   "id": "fBOZ4nstOUk4V0nv",
   "name": "WMMA Pre-Meeting Briefing",
@@ -22,13 +22,13 @@
       "typeVersion": 1.2,
       "position": [
         -800,
-        112
+        -64
       ]
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT\n  mm.id AS meeting_id,\n  mm.manager_name,\n  mm.meeting_datetime,\n  mm.week_reference\nFROM manager_meetings mm\nLEFT JOIN pre_meeting_email_log pel\n  ON pel.meeting_id = mm.id\nWHERE pel.id IS NULL\n  AND mm.meeting_datetime BETWEEN DATE_SUB(NOW(), INTERVAL 7 DAY)\n                        AND DATE_ADD(NOW(), INTERVAL 7 DAY)",
+        "query": "SELECT\n  mm.id AS meeting_id,\n  mm.manager_name,\n  mm.meeting_datetime,\n  mm.week_reference\nFROM manager_meetings mm\nLEFT JOIN pre_meeting_email_log pel\n  ON pel.meeting_id = mm.id\nWHERE (\n    pel.id IS NULL\n    OR (\n      pel.email_status = 'failed'\n      AND pel.email_sent_timestamp IS NULL\n    )\n  )\n  AND mm.meeting_datetime BETWEEN DATE_ADD(NOW(), INTERVAL 12 HOUR)\n                              AND DATE_ADD(NOW(), INTERVAL 24 HOUR);",
         "options": {}
       },
       "id": "ce3dbfeb-73c3-43b1-b867-d8426985c461",
@@ -36,8 +36,8 @@
       "type": "n8n-nodes-base.mySql",
       "typeVersion": 2.5,
       "position": [
-        -528,
-        112
+        -576,
+        -64
       ],
       "credentials": {
         "mySql": {
@@ -55,8 +55,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -288,
-        112
+        -352,
+        -64
       ]
     },
     {
@@ -72,8 +72,8 @@
       "type": "n8n-nodes-base.mySql",
       "typeVersion": 2.5,
       "position": [
-        0,
-        -16
+        -128,
+        -256
       ],
       "executeOnce": false,
       "credentials": {
@@ -86,9 +86,9 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT\n  action_description,\n  action_owner,\n  due_date,\n  status,\n  property_name\nFROM manager_meeting_actions\nWHERE meeting_id = $1\nORDER BY due_date ASC, created_at ASC;",
+        "query": "SELECT\n  action_description,\n  action_owner,\n  due_date,\n  status,\n  property_name\nFROM manager_meeting_actions\nWHERE manager_name = $1\n  AND status IN ('open', 'overdue')\nORDER BY\n  due_date ASC,\n  created_at ASC;",
         "options": {
-          "queryReplacement": "={{\n[\n  $json.meeting_id\n]\n}}"
+          "queryReplacement": "={{ [\n  $json.manager_name\n] }}"
         }
       },
       "id": "403a3b4f-a845-41c3-80b7-e746d98fb4d6",
@@ -96,8 +96,8 @@
       "type": "n8n-nodes-base.mySql",
       "typeVersion": 2.5,
       "position": [
-        0,
-        192
+        -128,
+        -64
       ],
       "alwaysOutputData": true,
       "executeOnce": false,
@@ -110,30 +110,15 @@
     },
     {
       "parameters": {
-        "mode": "combine",
-        "combineBy": "combineByPosition",
-        "options": {}
-      },
-      "id": "4b31f284-5cf4-4cde-88b1-2eafa40ff85c",
-      "name": "Merge Snapshot and Actions",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        256,
-        96
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const sourceItems = $input.all();\n\n// split snapshot + action rows\nconst snapshot = sourceItems\n  .filter(i => i.json && i.json.vacant_units !== undefined)\n  .map(i => i.json);\n\nconst ops = $json.operational_tasks || [];\n\nconst opsHtml = ops.length\n  ? ops.map(o => `\n    <div style=\"margin-bottom:8px;\">\n      <b>${o.name}</b><br>\n      Due: ${o.date} (${o.days_until} days)\n    </div>\n  `).join('')\n  : '<div>No upcoming operational deadlines</div>';\n\nconst actions = sourceItems\n  .filter(i => i.json && i.json.action_description !== undefined)\n  .map(i => i.json);\n\n// current meeting context\nconst meeting = $('Pass Through Meetings').item.json;\n\n// clean subject date\nconst dt = new Date(meeting.meeting_datetime);\nconst formattedDate = dt.toLocaleString('en-US', {\n  month: 'short',\n  day: 'numeric',\n  year: 'numeric',\n  hour: 'numeric',\n  minute: '2-digit'\n});\n\n// dedupe snapshot by property_name just in case\nconst snapshotMap = {};\nfor (const row of snapshot) {\n  snapshotMap[row.property_name] = row;\n}\nconst cleanSnapshot = Object.values(snapshotMap);\n\n// build snapshot html\nconst snapshotHtml = cleanSnapshot.length\n  ? cleanSnapshot.map(r => `\n    <div style=\"margin-bottom:14px;\">\n      <strong style=\"font-size:15px;\">${r.property_name}</strong>\n      <hr style=\"border:none;border-top:1px solid #ddd;margin:6px 0;\">\n      Vacants: ${r.vacant_units}<br>\n      Ready: ${r.ready_vacants}<br>\n      Not Ready: ${r.not_ready_vacants}<br>\n      Delinquent: <strong>${r.delinquent_count} / $${Number(r.delinquent_amount).toFixed(2)}</strong><br>\n      Turns: ${r.turns_in_progress}<br>\n      Work Orders &gt; 7 Days: ${r.work_orders_over_7_days}\n    </div>\n  `).join('')\n  : '<div>No snapshot rows found</div>';\n\n// build actions html\nconst actionsHtml = actions.length\n  ? actions.map(a => `\n    <div style=\"margin-bottom:14px;\">\n      <strong>${a.action_description}</strong><br>\n      Owner: ${a.action_owner}<br>\n      Due: ${a.due_date}<br>\n      Status: ${a.status}${a.property_name ? `<br>Property: ${a.property_name}` : ''}\n    </div>\n  `).join('')\n  : '<div>No prior actions found</div>';\n\n// final body\nconst body = `\n<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #000;\">\n  <p>Hi ${meeting.manager_name},</p>\n\n  <p>\n    In preparation for our upcoming meeting, here are the highlights and stats of last week and the action items that were discussed.\n  </p>\n\n  <h3 style=\"margin-top:20px;\">Portfolio Snapshot</h3>\n  ${snapshotHtml}\n\n    <h3 style=\"margin-top:20px;\">Upcoming Operational Deadlines</h3>\n  ${opsHtml}\n\n  <h3 style=\"margin-top:20px;\">Prior Action Items</h3>\n  ${actionsHtml}\n\n  <p style=\"margin-top:20px;\">\n    Please be prepared to provide updates on all open items and any material changes since the Monday baseline.\n  </p>\n\n  <p>- Brandon</p>\n</div>\n`;\n\nreturn [{\n  json: {\n    meeting_id: meeting.meeting_id,\n    manager_name: meeting.manager_name,\n    subject: `Weekly Review – ${meeting.manager_name} – ${formattedDate}`,\n    body\n  }\n}];"
+        "jsCode": "const meeting = $('Pass Through Meetings').item.json;\n\nconst snapshot = $('Fetch Snapshot')\n  .all()\n  .map(i => i.json)\n  .filter(r => r && r.property_name);\n\nconst actions = $('Fetch Recent Actions')\n  .all()\n  .map(i => i.json)\n  .filter(a => a && a.action_description);\n\nconst ops = $('Build Operational Deadlines').item?.json?.operational_tasks || $json.operational_tasks || [];\n\nconst opsHtml = ops.length\n  ? ops.map(o => `\n    <div style=\"margin-bottom:8px;\">\n      <b>${o.name}</b><br>\n      Due: ${o.date} (${o.days_until} days)\n    </div>\n  `).join('')\n  : '<div>No upcoming operational deadlines</div>';\n\nconst dt = new Date(meeting.meeting_datetime);\nconst formattedDate = dt.toLocaleString('en-US', {\n  month: 'short',\n  day: 'numeric',\n  year: 'numeric',\n  hour: 'numeric',\n  minute: '2-digit'\n});\n\nconst snapshotMap = {};\nfor (const row of snapshot) {\n  snapshotMap[row.property_name] = row;\n}\nconst cleanSnapshot = Object.values(snapshotMap);\n\nconst snapshotHtml = cleanSnapshot.length\n  ? cleanSnapshot.map(r => `\n    <div style=\"margin-bottom:14px;\">\n      <strong style=\"font-size:15px;\">${r.property_name}</strong>\n      <hr style=\"border:none;border-top:1px solid #ddd;margin:6px 0;\">\n      Vacants: ${r.vacant_units}<br>\n      Ready: ${r.ready_vacants}<br>\n      Not Ready: ${r.not_ready_vacants}<br>\n      Delinquent: <strong>${r.delinquent_count} / $${Number(r.delinquent_amount).toFixed(2)}</strong><br>\n      Turns: ${r.turns_in_progress}<br>\n      Work Orders &gt; 7 Days: ${r.work_orders_over_7_days}\n    </div>\n  `).join('')\n  : '<div>No snapshot rows found</div>';\n\nconst actionsHtml = actions.length\n  ? actions.map(a => `\n    <div style=\"margin-bottom:14px;\">\n      <strong>${a.action_description}</strong><br>\n      Owner: ${a.action_owner}<br>\n      Due: ${a.due_date}<br>\n      Status: ${a.status}${a.property_name ? `<br>Property: ${a.property_name}` : ''}\n    </div>\n  `).join('')\n  : '<div>No prior actions found</div>';\n\nconst body = `\n<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #000;\">\n  <p>Hi ${meeting.manager_name},</p>\n\n  <p>\n    In preparation for our upcoming meeting, here is the Monday baseline, upcoming operational deadlines, and open action items.\n  </p>\n\n  <h3 style=\"margin-top:20px;\">Portfolio Snapshot</h3>\n  ${snapshotHtml}\n\n  <h3 style=\"margin-top:20px;\">Upcoming Operational Deadlines</h3>\n  ${opsHtml}\n\n  <h3 style=\"margin-top:20px;\">Open Action Items</h3>\n  ${actionsHtml}\n\n  <p style=\"margin-top:20px;\">\n    Please be prepared to provide updates on open items and any material changes since the Monday baseline.\n  </p>\n\n  <p>- Brandon</p>\n</div>\n`;\n\nreturn [{\n  json: {\n    meeting_id: meeting.meeting_id,\n    manager_name: meeting.manager_name,\n    subject: `Weekly Review – ${meeting.manager_name} – ${formattedDate}`,\n    body\n  }\n}];"
       },
       "id": "1a7149dc-4f02-45e7-872b-58a723dedd79",
       "name": "Build Email",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        736,
-        112
+        320,
+        -64
       ]
     },
     {
@@ -149,7 +134,7 @@
       "typeVersion": 2.1,
       "position": [
         1216,
-        112
+        -64
       ],
       "webhookId": "04bba7e6-79c2-44d3-976a-671055fb5e01",
       "credentials": {
@@ -157,25 +142,26 @@
           "id": "LD5x69eYRRI6cdrn",
           "name": "Gmail account"
         }
-      }
+      },
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
-        "jsCode": "\nfunction makeUuid() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nconst source = $('Build Email').item.json;\nreturn [{\n  json: {\n    id: makeUuid(),\n    manager_name: source.manager_name,\n    meeting_id: source.meeting_id,\n    email_sent_timestamp: new Date().toISOString().slice(0,19).replace('T',' '),\n    email_status: 'sent',\n    created_at: new Date().toISOString().slice(0,19).replace('T',' ')\n  }\n}];\n"
+        "jsCode": "function makeUuid() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nconst source = $('Build Email').item.json;\n\nconst now = new Date().toISOString().slice(0,19).replace('T',' ');\n\nreturn [{\n  json: {\n    id: makeUuid(),\n    manager_name: source.manager_name,\n    meeting_id: source.meeting_id,\n\n    // leave null until confirmed send\n    email_sent_timestamp: null,\n\n    // keeping contract simple for now\n    email_status: 'sent',\n\n    created_at: now\n  }\n}];"
       },
       "id": "acaea56e-f496-49aa-8196-612de27edeef",
       "name": "Build Email Log Row",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1472,
-        112
+        544,
+        -64
       ]
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "\nINSERT INTO pre_meeting_email_log (\n  id,\n  manager_name,\n  meeting_id,\n  email_sent_timestamp,\n  email_status,\n  created_at\n) VALUES (\n  $1,$2,$3,$4,$5,$6\n);\n",
+        "query": "INSERT INTO pre_meeting_email_log (\n  id,\n  manager_name,\n  meeting_id,\n  email_sent_timestamp,\n  email_status,\n  created_at\n) VALUES (\n  $1,$2,$3,$4,$5,$6\n)\nON DUPLICATE KEY UPDATE\n  meeting_id = meeting_id;",
         "options": {
           "queryReplacement": "={{\n[\n  $json.id,\n  $json.manager_name,\n  $json.meeting_id,\n  $json.email_sent_timestamp || null,\n  $json.email_status,\n  $json.created_at\n]\n}}"
         }
@@ -185,8 +171,8 @@
       "type": "n8n-nodes-base.mySql",
       "typeVersion": 2.5,
       "position": [
-        1744,
-        112
+        768,
+        -64
       ],
       "credentials": {
         "mySql": {
@@ -197,13 +183,13 @@
     },
     {
       "parameters": {
-        "jsCode": "const meeting = $json;\n\n// participants passed from upstream (or empty)\nconst participants = meeting.participants || [];\n\n/*\n  HARD SOURCE OF TRUTH\n  This should grow over time\n*/\nconst directory = {\n  \"Brandon Stewart\": \"brandon@blazeproperty.com\",\n  \"Tammie Stewart\": \"tammie@blazeproperty.com\",\n  \"Nicole Baker\": \"nicoleb@blazeproperty.com\",\n  \"Amy\": \"amy@blazeproperty.com\",\n  \"Breanna\": \"breanna@blazeproperty.com\",\n  \"Debbie\": \"debbie@blazeproperty.com\",\n  \"Dede\": \"dede@blazeproperty.com\",\n  \"Shelbie\": \"shelbie@blazeproperty.com\",\n  \"Chris\": \"chris@blazeproperty.com\",\n  \"Ashlie\": \"ashlie@blazeproperty.com\"\n};\n\n/*\n  ALWAYS INCLUDED\n*/\nconst required = [\n  \"brandon@blazeproperty.com\",\n  \"tammie@blazeproperty.com\", \n  \"nicoleb@blazeproperty.com\"\n];\n\n/*\n  Resolve participants\n*/\nconst resolved = [];\n\nfor (const p of participants) {\n  if (!p) continue;\n\n  const value = String(p).trim();\n\n  // If already email → keep\n  if (value.includes('@')) {\n    resolved.push(value.toLowerCase());\n    continue;\n  }\n\n  // If name → map\n  if (directory[value]) {\n    resolved.push(directory[value]);\n  }\n}\n\n/*\n  Fallback: include manager if nothing resolved\n*/\nif (resolved.length === 0 && meeting.manager_name) {\n  const fallback = directory[meeting.manager_name];\n  if (fallback) resolved.push(fallback);\n}\n\n/*\n  Final recipient list\n*/\nconst recipients = [\n  ...new Set([\n    ...required,\n    ...resolved\n  ])\n];\n\nreturn [{\n  json: {\n    ...meeting,\n    recipients\n  }\n}];"
+        "jsCode": "const meeting = $('Build Email').item.json;\n\n// participants passed from upstream (or empty)\nconst participants = meeting.participants || [];\n\nconst directory = {\n  \"Brandon Stewart\": \"brandon@blazeproperty.com\",\n  \"Tammie Stewart\": \"tammie@blazeproperty.com\",\n  \"Nicole Baker\": \"nicoleb@blazeproperty.com\",\n  \"Amy\": \"amy@blazeproperty.com\",\n  \"Breanna\": \"breanna@blazeproperty.com\",\n  \"Debbie\": \"debbie@blazeproperty.com\",\n  \"Dede\": \"dede@blazeproperty.com\",\n  \"Shelbie\": \"shelbie@blazeproperty.com\",\n  \"Chris\": \"chris@blazeproperty.com\",\n  \"Ashlie\": \"ashlie@blazeproperty.com\"\n};\n\nconst required = [\n  \"brandon@blazeproperty.com\",\n  \"tammie@blazeproperty.com\", \n  \"nicoleb@blazeproperty.com\"\n];\n\nconst resolved = [];\n\nfor (const p of participants) {\n  if (!p) continue;\n\n  const value = String(p).trim();\n\n  if (value.includes('@')) {\n    resolved.push(value.toLowerCase());\n    continue;\n  }\n\n  if (directory[value]) {\n    resolved.push(directory[value]);\n  }\n}\n\nif (resolved.length === 0 && meeting.manager_name) {\n  const fallback = directory[meeting.manager_name];\n  if (fallback) resolved.push(fallback);\n}\n\nconst recipients = [\n  ...new Set([\n    ...required,\n    ...resolved\n  ])\n];\n\nreturn [{\n  json: {\n    ...meeting,\n    recipients\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        960,
-        112
+        992,
+        -64
       ],
       "id": "566a10a0-dd77-477c-81d0-3c47d3757a8e",
       "name": "Email Resolver"
@@ -215,8 +201,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        496,
-        112
+        96,
+        -64
       ],
       "id": "62a9cd5f-4622-4aa4-bff5-febb111f3fe3",
       "name": "Build Operational Deadlines"
@@ -232,11 +218,57 @@
       "type": "n8n-nodes-base.mySql",
       "typeVersion": 2.5,
       "position": [
-        0,
-        -224
+        -128,
+        128
       ],
       "id": "96b634dd-7a72-4e31-b4f7-570fd5ba90a8",
       "name": "Fetch Operational Holidays",
+      "credentials": {
+        "mySql": {
+          "id": "f3UzvmAj6M8o27XN",
+          "name": "Blaze_Ops Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE pre_meeting_email_log\nSET\n  email_sent_timestamp = NOW(),\n  email_status = 'sent'\nWHERE meeting_id = $1;",
+        "options": {
+          "queryReplacement": "={{[\n  $json.meeting_id\n]}}"
+        }
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        1472,
+        -96
+      ],
+      "id": "5db3ac4e-f409-4509-ae35-deb2a0fb4deb",
+      "name": "Update Email Log Sent Timestamp",
+      "credentials": {
+        "mySql": {
+          "id": "f3UzvmAj6M8o27XN",
+          "name": "Blaze_Ops Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE pre_meeting_email_log\nSET email_status = 'failed'\nWHERE meeting_id = $1;",
+        "options": {
+          "queryReplacement": "={{ [\n  $('Build Email').item.json.meeting_id\n] }}"
+        }
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        1472,
+        128
+      ],
+      "id": "ab7ba56b-0f0e-4493-9df1-e5437dc46c80",
+      "name": "Update Email Log Failed",
       "credentials": {
         "mySql": {
           "id": "f3UzvmAj6M8o27XN",
@@ -293,7 +325,7 @@
       "main": [
         [
           {
-            "node": "Merge Snapshot and Actions",
+            "node": "Build Operational Deadlines",
             "type": "main",
             "index": 0
           }
@@ -301,17 +333,6 @@
       ]
     },
     "Fetch Recent Actions": {
-      "main": [
-        [
-          {
-            "node": "Merge Snapshot and Actions",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Merge Snapshot and Actions": {
       "main": [
         [
           {
@@ -326,7 +347,7 @@
       "main": [
         [
           {
-            "node": "Email Resolver",
+            "node": "Build Email Log Row",
             "type": "main",
             "index": 0
           }
@@ -337,7 +358,14 @@
       "main": [
         [
           {
-            "node": "Build Email Log Row",
+            "node": "Update Email Log Sent Timestamp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Email Log Failed",
             "type": "main",
             "index": 0
           }
@@ -379,7 +407,24 @@
     },
     "Fetch Operational Holidays": {
       "main": [
-        []
+        [
+          {
+            "node": "Build Operational Deadlines",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Email Log": {
+      "main": [
+        [
+          {
+            "node": "Email Resolver",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
@@ -396,8 +441,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "168ef11c-ac3d-43bf-adec-a43d0b4cce70",
-  "activeVersionId": "4b03c1c3-8671-420c-a073-3af12604c29e",
+  "versionId": "2ab78e85-25ce-4145-89e1-076b27e75b91",
+  "activeVersionId": "2ab78e85-25ce-4145-89e1-076b27e75b91",
   "triggerCount": 1,
   "shared": [
     {
@@ -409,9 +454,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-04-23T13:34:00.709Z",
-    "createdAt": "2026-04-23T13:33:22.607Z",
-    "versionId": "4b03c1c3-8671-420c-a073-3af12604c29e",
+    "updatedAt": "2026-04-28T14:03:32.749Z",
+    "createdAt": "2026-04-28T14:03:21.410Z",
+    "versionId": "2ab78e85-25ce-4145-89e1-076b27e75b91",
     "workflowId": "fBOZ4nstOUk4V0nv",
     "nodes": [
       {
@@ -430,13 +475,13 @@
         "typeVersion": 1.2,
         "position": [
           -800,
-          112
+          -64
         ]
       },
       {
         "parameters": {
           "operation": "executeQuery",
-          "query": "SELECT\n  mm.id AS meeting_id,\n  mm.manager_name,\n  mm.meeting_datetime,\n  mm.week_reference\nFROM manager_meetings mm\nLEFT JOIN pre_meeting_email_log pel\n  ON pel.meeting_id = mm.id\nWHERE pel.id IS NULL\n  AND mm.meeting_datetime BETWEEN DATE_SUB(NOW(), INTERVAL 7 DAY)\n                        AND DATE_ADD(NOW(), INTERVAL 7 DAY)",
+          "query": "SELECT\n  mm.id AS meeting_id,\n  mm.manager_name,\n  mm.meeting_datetime,\n  mm.week_reference\nFROM manager_meetings mm\nLEFT JOIN pre_meeting_email_log pel\n  ON pel.meeting_id = mm.id\nWHERE (\n    pel.id IS NULL\n    OR (\n      pel.email_status = 'failed'\n      AND pel.email_sent_timestamp IS NULL\n    )\n  )\n  AND mm.meeting_datetime BETWEEN DATE_ADD(NOW(), INTERVAL 12 HOUR)\n                              AND DATE_ADD(NOW(), INTERVAL 24 HOUR);",
           "options": {}
         },
         "id": "ce3dbfeb-73c3-43b1-b867-d8426985c461",
@@ -444,8 +489,8 @@
         "type": "n8n-nodes-base.mySql",
         "typeVersion": 2.5,
         "position": [
-          -528,
-          112
+          -576,
+          -64
         ],
         "credentials": {
           "mySql": {
@@ -463,8 +508,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -288,
-          112
+          -352,
+          -64
         ]
       },
       {
@@ -480,8 +525,8 @@
         "type": "n8n-nodes-base.mySql",
         "typeVersion": 2.5,
         "position": [
-          0,
-          -16
+          -128,
+          -256
         ],
         "executeOnce": false,
         "credentials": {
@@ -494,9 +539,9 @@
       {
         "parameters": {
           "operation": "executeQuery",
-          "query": "SELECT\n  action_description,\n  action_owner,\n  due_date,\n  status,\n  property_name\nFROM manager_meeting_actions\nWHERE meeting_id = $1\nORDER BY due_date ASC, created_at ASC;",
+          "query": "SELECT\n  action_description,\n  action_owner,\n  due_date,\n  status,\n  property_name\nFROM manager_meeting_actions\nWHERE manager_name = $1\n  AND status IN ('open', 'overdue')\nORDER BY\n  due_date ASC,\n  created_at ASC;",
           "options": {
-            "queryReplacement": "={{\n[\n  $json.meeting_id\n]\n}}"
+            "queryReplacement": "={{ [\n  $json.manager_name\n] }}"
           }
         },
         "id": "403a3b4f-a845-41c3-80b7-e746d98fb4d6",
@@ -504,8 +549,8 @@
         "type": "n8n-nodes-base.mySql",
         "typeVersion": 2.5,
         "position": [
-          0,
-          192
+          -128,
+          -64
         ],
         "alwaysOutputData": true,
         "executeOnce": false,
@@ -518,30 +563,15 @@
       },
       {
         "parameters": {
-          "mode": "combine",
-          "combineBy": "combineByPosition",
-          "options": {}
-        },
-        "id": "4b31f284-5cf4-4cde-88b1-2eafa40ff85c",
-        "name": "Merge Snapshot and Actions",
-        "type": "n8n-nodes-base.merge",
-        "typeVersion": 3.2,
-        "position": [
-          256,
-          96
-        ]
-      },
-      {
-        "parameters": {
-          "jsCode": "const sourceItems = $input.all();\n\n// split snapshot + action rows\nconst snapshot = sourceItems\n  .filter(i => i.json && i.json.vacant_units !== undefined)\n  .map(i => i.json);\n\nconst ops = $json.operational_tasks || [];\n\nconst opsHtml = ops.length\n  ? ops.map(o => `\n    <div style=\"margin-bottom:8px;\">\n      <b>${o.name}</b><br>\n      Due: ${o.date} (${o.days_until} days)\n    </div>\n  `).join('')\n  : '<div>No upcoming operational deadlines</div>';\n\nconst actions = sourceItems\n  .filter(i => i.json && i.json.action_description !== undefined)\n  .map(i => i.json);\n\n// current meeting context\nconst meeting = $('Pass Through Meetings').item.json;\n\n// clean subject date\nconst dt = new Date(meeting.meeting_datetime);\nconst formattedDate = dt.toLocaleString('en-US', {\n  month: 'short',\n  day: 'numeric',\n  year: 'numeric',\n  hour: 'numeric',\n  minute: '2-digit'\n});\n\n// dedupe snapshot by property_name just in case\nconst snapshotMap = {};\nfor (const row of snapshot) {\n  snapshotMap[row.property_name] = row;\n}\nconst cleanSnapshot = Object.values(snapshotMap);\n\n// build snapshot html\nconst snapshotHtml = cleanSnapshot.length\n  ? cleanSnapshot.map(r => `\n    <div style=\"margin-bottom:14px;\">\n      <strong style=\"font-size:15px;\">${r.property_name}</strong>\n      <hr style=\"border:none;border-top:1px solid #ddd;margin:6px 0;\">\n      Vacants: ${r.vacant_units}<br>\n      Ready: ${r.ready_vacants}<br>\n      Not Ready: ${r.not_ready_vacants}<br>\n      Delinquent: <strong>${r.delinquent_count} / $${Number(r.delinquent_amount).toFixed(2)}</strong><br>\n      Turns: ${r.turns_in_progress}<br>\n      Work Orders &gt; 7 Days: ${r.work_orders_over_7_days}\n    </div>\n  `).join('')\n  : '<div>No snapshot rows found</div>';\n\n// build actions html\nconst actionsHtml = actions.length\n  ? actions.map(a => `\n    <div style=\"margin-bottom:14px;\">\n      <strong>${a.action_description}</strong><br>\n      Owner: ${a.action_owner}<br>\n      Due: ${a.due_date}<br>\n      Status: ${a.status}${a.property_name ? `<br>Property: ${a.property_name}` : ''}\n    </div>\n  `).join('')\n  : '<div>No prior actions found</div>';\n\n// final body\nconst body = `\n<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #000;\">\n  <p>Hi ${meeting.manager_name},</p>\n\n  <p>\n    In preparation for our upcoming meeting, here are the highlights and stats of last week and the action items that were discussed.\n  </p>\n\n  <h3 style=\"margin-top:20px;\">Portfolio Snapshot</h3>\n  ${snapshotHtml}\n\n    <h3 style=\"margin-top:20px;\">Upcoming Operational Deadlines</h3>\n  ${opsHtml}\n\n  <h3 style=\"margin-top:20px;\">Prior Action Items</h3>\n  ${actionsHtml}\n\n  <p style=\"margin-top:20px;\">\n    Please be prepared to provide updates on all open items and any material changes since the Monday baseline.\n  </p>\n\n  <p>- Brandon</p>\n</div>\n`;\n\nreturn [{\n  json: {\n    meeting_id: meeting.meeting_id,\n    manager_name: meeting.manager_name,\n    subject: `Weekly Review – ${meeting.manager_name} – ${formattedDate}`,\n    body\n  }\n}];"
+          "jsCode": "const meeting = $('Pass Through Meetings').item.json;\n\nconst snapshot = $('Fetch Snapshot')\n  .all()\n  .map(i => i.json)\n  .filter(r => r && r.property_name);\n\nconst actions = $('Fetch Recent Actions')\n  .all()\n  .map(i => i.json)\n  .filter(a => a && a.action_description);\n\nconst ops = $('Build Operational Deadlines').item?.json?.operational_tasks || $json.operational_tasks || [];\n\nconst opsHtml = ops.length\n  ? ops.map(o => `\n    <div style=\"margin-bottom:8px;\">\n      <b>${o.name}</b><br>\n      Due: ${o.date} (${o.days_until} days)\n    </div>\n  `).join('')\n  : '<div>No upcoming operational deadlines</div>';\n\nconst dt = new Date(meeting.meeting_datetime);\nconst formattedDate = dt.toLocaleString('en-US', {\n  month: 'short',\n  day: 'numeric',\n  year: 'numeric',\n  hour: 'numeric',\n  minute: '2-digit'\n});\n\nconst snapshotMap = {};\nfor (const row of snapshot) {\n  snapshotMap[row.property_name] = row;\n}\nconst cleanSnapshot = Object.values(snapshotMap);\n\nconst snapshotHtml = cleanSnapshot.length\n  ? cleanSnapshot.map(r => `\n    <div style=\"margin-bottom:14px;\">\n      <strong style=\"font-size:15px;\">${r.property_name}</strong>\n      <hr style=\"border:none;border-top:1px solid #ddd;margin:6px 0;\">\n      Vacants: ${r.vacant_units}<br>\n      Ready: ${r.ready_vacants}<br>\n      Not Ready: ${r.not_ready_vacants}<br>\n      Delinquent: <strong>${r.delinquent_count} / $${Number(r.delinquent_amount).toFixed(2)}</strong><br>\n      Turns: ${r.turns_in_progress}<br>\n      Work Orders &gt; 7 Days: ${r.work_orders_over_7_days}\n    </div>\n  `).join('')\n  : '<div>No snapshot rows found</div>';\n\nconst actionsHtml = actions.length\n  ? actions.map(a => `\n    <div style=\"margin-bottom:14px;\">\n      <strong>${a.action_description}</strong><br>\n      Owner: ${a.action_owner}<br>\n      Due: ${a.due_date}<br>\n      Status: ${a.status}${a.property_name ? `<br>Property: ${a.property_name}` : ''}\n    </div>\n  `).join('')\n  : '<div>No prior actions found</div>';\n\nconst body = `\n<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #000;\">\n  <p>Hi ${meeting.manager_name},</p>\n\n  <p>\n    In preparation for our upcoming meeting, here is the Monday baseline, upcoming operational deadlines, and open action items.\n  </p>\n\n  <h3 style=\"margin-top:20px;\">Portfolio Snapshot</h3>\n  ${snapshotHtml}\n\n  <h3 style=\"margin-top:20px;\">Upcoming Operational Deadlines</h3>\n  ${opsHtml}\n\n  <h3 style=\"margin-top:20px;\">Open Action Items</h3>\n  ${actionsHtml}\n\n  <p style=\"margin-top:20px;\">\n    Please be prepared to provide updates on open items and any material changes since the Monday baseline.\n  </p>\n\n  <p>- Brandon</p>\n</div>\n`;\n\nreturn [{\n  json: {\n    meeting_id: meeting.meeting_id,\n    manager_name: meeting.manager_name,\n    subject: `Weekly Review – ${meeting.manager_name} – ${formattedDate}`,\n    body\n  }\n}];"
         },
         "id": "1a7149dc-4f02-45e7-872b-58a723dedd79",
         "name": "Build Email",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          736,
-          112
+          320,
+          -64
         ]
       },
       {
@@ -557,7 +587,7 @@
         "typeVersion": 2.1,
         "position": [
           1216,
-          112
+          -64
         ],
         "webhookId": "04bba7e6-79c2-44d3-976a-671055fb5e01",
         "credentials": {
@@ -565,25 +595,26 @@
             "id": "LD5x69eYRRI6cdrn",
             "name": "Gmail account"
           }
-        }
+        },
+        "onError": "continueErrorOutput"
       },
       {
         "parameters": {
-          "jsCode": "\nfunction makeUuid() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nconst source = $('Build Email').item.json;\nreturn [{\n  json: {\n    id: makeUuid(),\n    manager_name: source.manager_name,\n    meeting_id: source.meeting_id,\n    email_sent_timestamp: new Date().toISOString().slice(0,19).replace('T',' '),\n    email_status: 'sent',\n    created_at: new Date().toISOString().slice(0,19).replace('T',' ')\n  }\n}];\n"
+          "jsCode": "function makeUuid() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nconst source = $('Build Email').item.json;\n\nconst now = new Date().toISOString().slice(0,19).replace('T',' ');\n\nreturn [{\n  json: {\n    id: makeUuid(),\n    manager_name: source.manager_name,\n    meeting_id: source.meeting_id,\n\n    // leave null until confirmed send\n    email_sent_timestamp: null,\n\n    // keeping contract simple for now\n    email_status: 'sent',\n\n    created_at: now\n  }\n}];"
         },
         "id": "acaea56e-f496-49aa-8196-612de27edeef",
         "name": "Build Email Log Row",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1472,
-          112
+          544,
+          -64
         ]
       },
       {
         "parameters": {
           "operation": "executeQuery",
-          "query": "\nINSERT INTO pre_meeting_email_log (\n  id,\n  manager_name,\n  meeting_id,\n  email_sent_timestamp,\n  email_status,\n  created_at\n) VALUES (\n  $1,$2,$3,$4,$5,$6\n);\n",
+          "query": "INSERT INTO pre_meeting_email_log (\n  id,\n  manager_name,\n  meeting_id,\n  email_sent_timestamp,\n  email_status,\n  created_at\n) VALUES (\n  $1,$2,$3,$4,$5,$6\n)\nON DUPLICATE KEY UPDATE\n  meeting_id = meeting_id;",
           "options": {
             "queryReplacement": "={{\n[\n  $json.id,\n  $json.manager_name,\n  $json.meeting_id,\n  $json.email_sent_timestamp || null,\n  $json.email_status,\n  $json.created_at\n]\n}}"
           }
@@ -593,8 +624,8 @@
         "type": "n8n-nodes-base.mySql",
         "typeVersion": 2.5,
         "position": [
-          1744,
-          112
+          768,
+          -64
         ],
         "credentials": {
           "mySql": {
@@ -605,13 +636,13 @@
       },
       {
         "parameters": {
-          "jsCode": "const meeting = $json;\n\n// participants passed from upstream (or empty)\nconst participants = meeting.participants || [];\n\n/*\n  HARD SOURCE OF TRUTH\n  This should grow over time\n*/\nconst directory = {\n  \"Brandon Stewart\": \"brandon@blazeproperty.com\",\n  \"Tammie Stewart\": \"tammie@blazeproperty.com\",\n  \"Nicole Baker\": \"nicoleb@blazeproperty.com\",\n  \"Amy\": \"amy@blazeproperty.com\",\n  \"Breanna\": \"breanna@blazeproperty.com\",\n  \"Debbie\": \"debbie@blazeproperty.com\",\n  \"Dede\": \"dede@blazeproperty.com\",\n  \"Shelbie\": \"shelbie@blazeproperty.com\",\n  \"Chris\": \"chris@blazeproperty.com\",\n  \"Ashlie\": \"ashlie@blazeproperty.com\"\n};\n\n/*\n  ALWAYS INCLUDED\n*/\nconst required = [\n  \"brandon@blazeproperty.com\",\n  \"tammie@blazeproperty.com\", \n  \"nicoleb@blazeproperty.com\"\n];\n\n/*\n  Resolve participants\n*/\nconst resolved = [];\n\nfor (const p of participants) {\n  if (!p) continue;\n\n  const value = String(p).trim();\n\n  // If already email → keep\n  if (value.includes('@')) {\n    resolved.push(value.toLowerCase());\n    continue;\n  }\n\n  // If name → map\n  if (directory[value]) {\n    resolved.push(directory[value]);\n  }\n}\n\n/*\n  Fallback: include manager if nothing resolved\n*/\nif (resolved.length === 0 && meeting.manager_name) {\n  const fallback = directory[meeting.manager_name];\n  if (fallback) resolved.push(fallback);\n}\n\n/*\n  Final recipient list\n*/\nconst recipients = [\n  ...new Set([\n    ...required,\n    ...resolved\n  ])\n];\n\nreturn [{\n  json: {\n    ...meeting,\n    recipients\n  }\n}];"
+          "jsCode": "const meeting = $('Build Email').item.json;\n\n// participants passed from upstream (or empty)\nconst participants = meeting.participants || [];\n\nconst directory = {\n  \"Brandon Stewart\": \"brandon@blazeproperty.com\",\n  \"Tammie Stewart\": \"tammie@blazeproperty.com\",\n  \"Nicole Baker\": \"nicoleb@blazeproperty.com\",\n  \"Amy\": \"amy@blazeproperty.com\",\n  \"Breanna\": \"breanna@blazeproperty.com\",\n  \"Debbie\": \"debbie@blazeproperty.com\",\n  \"Dede\": \"dede@blazeproperty.com\",\n  \"Shelbie\": \"shelbie@blazeproperty.com\",\n  \"Chris\": \"chris@blazeproperty.com\",\n  \"Ashlie\": \"ashlie@blazeproperty.com\"\n};\n\nconst required = [\n  \"brandon@blazeproperty.com\",\n  \"tammie@blazeproperty.com\", \n  \"nicoleb@blazeproperty.com\"\n];\n\nconst resolved = [];\n\nfor (const p of participants) {\n  if (!p) continue;\n\n  const value = String(p).trim();\n\n  if (value.includes('@')) {\n    resolved.push(value.toLowerCase());\n    continue;\n  }\n\n  if (directory[value]) {\n    resolved.push(directory[value]);\n  }\n}\n\nif (resolved.length === 0 && meeting.manager_name) {\n  const fallback = directory[meeting.manager_name];\n  if (fallback) resolved.push(fallback);\n}\n\nconst recipients = [\n  ...new Set([\n    ...required,\n    ...resolved\n  ])\n];\n\nreturn [{\n  json: {\n    ...meeting,\n    recipients\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          960,
-          112
+          992,
+          -64
         ],
         "id": "566a10a0-dd77-477c-81d0-3c47d3757a8e",
         "name": "Email Resolver"
@@ -623,8 +654,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          496,
-          112
+          96,
+          -64
         ],
         "id": "62a9cd5f-4622-4aa4-bff5-febb111f3fe3",
         "name": "Build Operational Deadlines"
@@ -640,11 +671,57 @@
         "type": "n8n-nodes-base.mySql",
         "typeVersion": 2.5,
         "position": [
-          0,
-          -208
+          -128,
+          128
         ],
         "id": "96b634dd-7a72-4e31-b4f7-570fd5ba90a8",
         "name": "Fetch Operational Holidays",
+        "credentials": {
+          "mySql": {
+            "id": "f3UzvmAj6M8o27XN",
+            "name": "Blaze_Ops Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "UPDATE pre_meeting_email_log\nSET\n  email_sent_timestamp = NOW(),\n  email_status = 'sent'\nWHERE meeting_id = $1;",
+          "options": {
+            "queryReplacement": "={{[\n  $json.meeting_id\n]}}"
+          }
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          1472,
+          -96
+        ],
+        "id": "5db3ac4e-f409-4509-ae35-deb2a0fb4deb",
+        "name": "Update Email Log Sent Timestamp",
+        "credentials": {
+          "mySql": {
+            "id": "f3UzvmAj6M8o27XN",
+            "name": "Blaze_Ops Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "UPDATE pre_meeting_email_log\nSET email_status = 'failed'\nWHERE meeting_id = $1;",
+          "options": {
+            "queryReplacement": "={{ [\n  $('Build Email').item.json.meeting_id\n] }}"
+          }
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          1472,
+          128
+        ],
+        "id": "ab7ba56b-0f0e-4493-9df1-e5437dc46c80",
+        "name": "Update Email Log Failed",
         "credentials": {
           "mySql": {
             "id": "f3UzvmAj6M8o27XN",
@@ -701,7 +778,7 @@
         "main": [
           [
             {
-              "node": "Merge Snapshot and Actions",
+              "node": "Build Operational Deadlines",
               "type": "main",
               "index": 0
             }
@@ -709,17 +786,6 @@
         ]
       },
       "Fetch Recent Actions": {
-        "main": [
-          [
-            {
-              "node": "Merge Snapshot and Actions",
-              "type": "main",
-              "index": 1
-            }
-          ]
-        ]
-      },
-      "Merge Snapshot and Actions": {
         "main": [
           [
             {
@@ -734,7 +800,7 @@
         "main": [
           [
             {
-              "node": "Email Resolver",
+              "node": "Build Email Log Row",
               "type": "main",
               "index": 0
             }
@@ -745,7 +811,14 @@
         "main": [
           [
             {
-              "node": "Build Email Log Row",
+              "node": "Update Email Log Sent Timestamp",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Update Email Log Failed",
               "type": "main",
               "index": 0
             }
@@ -787,12 +860,29 @@
       },
       "Fetch Operational Holidays": {
         "main": [
-          []
+          [
+            {
+              "node": "Build Operational Deadlines",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Insert Email Log": {
+        "main": [
+          [
+            {
+              "node": "Email Resolver",
+              "type": "main",
+              "index": 0
+            }
+          ]
         ]
       }
     },
     "authors": "Brandon Stewart",
-    "name": "Version 4b03c1c3",
+    "name": "Version 2ab78e85",
     "description": "",
     "autosaved": true
   },
