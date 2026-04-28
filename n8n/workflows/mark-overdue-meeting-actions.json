@@ -1,0 +1,163 @@
+{
+  "updatedAt": "2026-04-27T21:21:41.321Z",
+  "createdAt": "2026-04-22T15:36:06.303Z",
+  "id": "RreStruo29XN87Y9",
+  "name": "WMMA Mark Overdue Meeting Actions",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "6216bde9-af73-4f7d-9db4-0c06e0f7ea58",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "update manager_meeting_actions set status = 'overdue' where status = 'open' and due_date < current_date();",
+        "options": {}
+      },
+      "id": "38d126e8-b2dc-4e6c-b3ba-3791979e9eaf",
+      "name": "Mark Overdue Actions",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        320,
+        0
+      ],
+      "credentials": {
+        "mySql": {
+          "id": "f3UzvmAj6M8o27XN",
+          "name": "Blaze_Ops Database"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Mark Overdue Actions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "443a5b86-6261-4cf1-ad73-5201606e3417",
+  "activeVersionId": "443a5b86-6261-4cf1-ad73-5201606e3417",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-04-22T15:36:06.303Z",
+      "createdAt": "2026-04-22T15:36:06.303Z",
+      "role": "workflow:owner",
+      "workflowId": "RreStruo29XN87Y9",
+      "projectId": "4YBqTudLOBUQfTvU"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-04-22T17:59:27.056Z",
+    "createdAt": "2026-04-22T15:36:12.608Z",
+    "versionId": "443a5b86-6261-4cf1-ad73-5201606e3417",
+    "workflowId": "RreStruo29XN87Y9",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours",
+                "hoursInterval": 6
+              }
+            ]
+          }
+        },
+        "id": "6216bde9-af73-4f7d-9db4-0c06e0f7ea58",
+        "name": "Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "update manager_meeting_actions set status = 'overdue' where status = 'open' and due_date < current_date();",
+          "options": {}
+        },
+        "id": "38d126e8-b2dc-4e6c-b3ba-3791979e9eaf",
+        "name": "Mark Overdue Actions",
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          320,
+          0
+        ],
+        "credentials": {
+          "mySql": {
+            "id": "f3UzvmAj6M8o27XN",
+            "name": "Blaze_Ops Database"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Mark Overdue Actions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Brandon Stewart",
+    "name": "Version 443a5b86",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": [
+    {
+      "updatedAt": "2026-04-23T12:40:11.767Z",
+      "createdAt": "2026-04-23T12:40:11.767Z",
+      "id": "nwYcKrWKYFiGYTIf",
+      "name": "Meeting Workflow"
+    }
+  ]
+}
