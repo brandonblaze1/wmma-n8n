@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-23T12:41:01.240Z",
+  "updatedAt": "2026-04-28T13:25:15.699Z",
   "createdAt": "2026-04-22T16:22:41.279Z",
   "id": "WFBtaAHdgBUqkE4q",
   "name": "WMMA Notes Intake",
@@ -13,7 +13,7 @@
       "type": "n8n-nodes-base.cron",
       "typeVersion": 1,
       "position": [
-        224,
+        256,
         80
       ]
     },
@@ -41,7 +41,7 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        432,
+        464,
         80
       ],
       "credentials": {
@@ -53,15 +53,15 @@
     },
     {
       "parameters": {
-        "jsCode": "function makeUuid() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nconst item = $json;\nconst fullText = item.full_text || '';\n\n// Parse manager from title line\nconst managerMatch = fullText.match(/\\[WMMA\\]\\s*(.*?)\\s+Weekly Manager Meeting/i);\nconst manager_name = managerMatch ? managerMatch[1].trim() : null;\n\n// Parse meeting date from first line if possible\nconst firstLine = fullText.split('\\n')[0]?.trim();\nlet meetingDate = new Date(firstLine);\n\nif (isNaN(meetingDate.getTime())) {\n  meetingDate = new Date();\n}\n\n// Set meeting datetime\nconst meeting_datetime = meetingDate.toISOString().slice(0, 19).replace('T', ' ');\n\n// Derive Monday week reference\nconst d = new Date(meetingDate);\nconst day = d.getDay();\nconst diff = d.getDate() - day + (day === 0 ? -6 : 1);\nconst monday = new Date(d.setDate(diff)).toISOString().slice(0, 10);\n\nconst created_at = new Date().toISOString().slice(0, 19).replace('T', ' ');\n\nreturn [{\n  json: {\n    id: makeUuid(),\n    drive_file_id: item.drive_file_id,\n    manager_name,\n    meeting_datetime,\n    week_reference: monday,\n    transcript_raw: null,\n    full_text: item.full_text,\n    summary_structured: item.summary_structured,\n    actions: item.actions,\n    created_at\n  }\n}];"
+        "jsCode": "function makeUuid() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nconst item = $json;\nconst fullText = item.full_text || '';\n\n// Parse manager from title line\nconst managerMatch = fullText.match(/\\[WMMA\\]\\s*(.*?)\\s+Weekly Manager Meeting/i);\nconst manager_name = managerMatch ? managerMatch[1].trim() : null;\n\n// Parse meeting date from first line if possible\nconst firstLine = fullText.split('\\n')[0]?.trim();\nlet meetingDate = new Date(firstLine);\n\nif (isNaN(meetingDate.getTime())) {\n  meetingDate = new Date();\n}\n\n// Set meeting datetime\nconst meeting_datetime = meetingDate.toISOString().slice(0, 19).replace('T', ' ');\n\n// Derive Monday week reference\nconst d = new Date(meetingDate);\nconst day = d.getDay();\nconst diff = d.getDate() - day + (day === 0 ? -6 : 1);\nconst monday = new Date(d.setDate(diff)).toISOString().slice(0, 10);\n\nconst created_at = new Date().toISOString().slice(0, 19).replace('T', ' ');\n\nreturn [{\n  json: {\n    id: makeUuid(),\n    drive_file_id: item.drive_file_id,\n    drive_last_modified: item.drive_last_modified,\n    manager_name,\n    meeting_datetime,\n    week_reference: monday,\n    transcript_raw: null,\n    full_text: item.full_text,\n    summary_structured: item.summary_structured,\n    actions: item.actions,\n    created_at\n  }\n}];"
       },
       "id": "68e94027-a7f9-46b3-b9c6-e00550f9d72d",
       "name": "Parse Metadata",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        992,
-        80
+        1232,
+        64
       ]
     },
     {
@@ -74,8 +74,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        1408,
-        80
+        1648,
+        64
       ]
     },
     {
@@ -87,8 +87,8 @@
       "type": "n8n-nodes-base.googleDocs",
       "typeVersion": 2,
       "position": [
-        640,
-        80
+        656,
+        -48
       ],
       "id": "4363dca8-722d-42e9-aac4-a9cfa3d7c621",
       "name": "Get a document",
@@ -101,15 +101,15 @@
     },
     {
       "parameters": {
-        "jsCode": "const doc = $json;\n\nlet fullText = '';\n\nfor (const el of doc.body?.content || []) {\n  if (el.paragraph?.elements) {\n    for (const pe of el.paragraph.elements) {\n      if (pe.textRun?.content) {\n        fullText += pe.textRun.content;\n      }\n    }\n  }\n}\n\n// Normalize\nfullText = fullText.replace(/\\r/g, '').trim();\n\n// Split sections\nfunction extractSection(text, start, endMarkers) {\n  const startIndex = text.indexOf(start);\n  if (startIndex === -1) return '';\n\n  let endIndex = text.length;\n\n  for (const marker of endMarkers) {\n    const idx = text.indexOf(marker, startIndex + start.length);\n    if (idx !== -1 && idx < endIndex) {\n      endIndex = idx;\n    }\n  }\n\n  return text.substring(startIndex + start.length, endIndex).trim();\n}\n\n// Normalize owner names to contract-safe values\nfunction normalizeOwner(owner) {\n  const v = String(owner || '').trim().toLowerCase();\n\n  if (v === 'brandon stewart' || v === 'brandon') return 'Brandon';\n  if (v === 'breanna blanks' || v === 'breanna' || v === 'brianna blanks' || v === 'brianna') return 'Breanna';\n\n  return String(owner || '').trim();\n}\n\n// Detect property from action text\nconst knownProperties = [\n  'Adobe',\n  'NorthPark',\n  'Courtyard',\n  'Jefferson',\n  'Riveredge',\n  'Crosskeys',\n  'Sagebrush',\n  'Westminster',\n  'Broadstone',\n  'Nelson',\n  'Oak Terrace',\n  'Single Families and Small Multi'\n];\n\nfunction detectProperty(text) {\n  for (const property of knownProperties) {\n    const re = new RegExp(`\\\\b${property.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\\\b`, 'i');\n    if (re.test(text)) return property;\n  }\n  return null;\n}\n\nconst portfolioPerformance = extractSection(fullText, 'Portfolio Performance', [\n  'Operational Issues',\n  'Decisions',\n  'Next steps'\n]);\n\nconst issues = extractSection(fullText, 'Operational Issues', [\n  'Decisions',\n  'Next steps'\n]);\n\nconst decisions = extractSection(fullText, 'Decisions', [\n  'Next steps'\n]);\n\nconst nextSteps = extractSection(fullText, 'Next steps', []);\n\n// Extract actions\nconst actionLines = nextSteps\n  .split('\\n')\n  .map(l => l.trim())\n  .filter(l => l.startsWith('[') && l.includes(']') && l.includes(':'));\n\nconst actions = actionLines.map(line => {\n  const match = line.match(/^\\[(.*?)\\]\\s*(.*?):\\s*(.*)$/);\n\n  if (!match) return null;\n\n  const rawOwner = match[1].trim();\n  const title = match[2].trim();\n  const detail = match[3].trim();\n\n  const owner = normalizeOwner(rawOwner);\n  const description = `${title}: ${detail}`;\n\n  const dueMatch = detail.match(/(\\d{4}-\\d{2}-\\d{2})/);\n  const property_name = detectProperty(`${title} ${detail}`);\n\n  return {\n    description,\n    owner,\n    due_date: dueMatch ? dueMatch[1] : null,\n    property_name\n  };\n}).filter(Boolean);\n\nreturn [{\n  json: {\n    drive_file_id: doc.documentId,\n    full_text: fullText,\n    summary_structured: {\n      changes: portfolioPerformance ? [portfolioPerformance] : [],\n      issues: issues ? [issues] : [],\n      decisions: decisions ? [decisions] : []\n    },\n    actions\n  }\n}];"
+        "jsCode": "const doc = $json;\n\nlet fullText = '';\n\nfor (const el of doc.body?.content || []) {\n  if (el.paragraph?.elements) {\n    for (const pe of el.paragraph.elements) {\n      if (pe.textRun?.content) {\n        fullText += pe.textRun.content;\n      }\n    }\n  }\n}\n\n// Normalize\nfullText = fullText.replace(/\\r/g, '').trim();\n\n// Split sections\nfunction extractSection(text, start, endMarkers) {\n  const startIndex = text.indexOf(start);\n  if (startIndex === -1) return '';\n\n  let endIndex = text.length;\n\n  for (const marker of endMarkers) {\n    const idx = text.indexOf(marker, startIndex + start.length);\n    if (idx !== -1 && idx < endIndex) {\n      endIndex = idx;\n    }\n  }\n\n  return text.substring(startIndex + start.length, endIndex).trim();\n}\n\n// Normalize owner names to contract-safe values\nfunction normalizeOwner(owner) {\n  const v = String(owner || '').trim().toLowerCase();\n\n  if (v === 'brandon stewart' || v === 'brandon') return 'Brandon';\n  if (v === 'breanna blanks' || v === 'breanna' || v === 'brianna blanks' || v === 'brianna') return 'Breanna';\n\n  return String(owner || '').trim();\n}\n\n// Detect property from action text\nconst knownProperties = [\n  'Adobe',\n  'NorthPark',\n  'Courtyard',\n  'Jefferson',\n  'Riveredge',\n  'Crosskeys',\n  'Sagebrush',\n  'Westminster',\n  'Broadstone',\n  'Nelson',\n  'Oak Terrace',\n  'Single Families and Small Multi'\n];\n\nfunction detectProperty(text) {\n  for (const property of knownProperties) {\n    const re = new RegExp(`\\\\b${property.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\\\b`, 'i');\n    if (re.test(text)) return property;\n  }\n  return null;\n}\n\nconst portfolioPerformance = extractSection(fullText, 'Portfolio Performance', [\n  'Operational Issues',\n  'Decisions',\n  'Next steps'\n]);\n\nconst issues = extractSection(fullText, 'Operational Issues', [\n  'Decisions',\n  'Next steps'\n]);\n\nconst decisions = extractSection(fullText, 'Decisions', [\n  'Next steps'\n]);\n\nconst nextSteps = extractSection(fullText, 'Next steps', []);\n\n// Extract actions\nconst actionLines = nextSteps\n  .split('\\n')\n  .map(l => l.trim())\n  .filter(l => l.startsWith('[') && l.includes(']') && l.includes(':'));\n\nconst actions = actionLines.map(line => {\n  const match = line.match(/^\\[(.*?)\\]\\s*(.*?):\\s*(.*)$/);\n\n  if (!match) return null;\n\n  const rawOwner = match[1].trim();\n  const title = match[2].trim();\n  const detail = match[3].trim();\n\n  const owner = normalizeOwner(rawOwner);\n  const description = `${title}: ${detail}`;\n\n  const dueMatch = detail.match(/(\\d{4}-\\d{2}-\\d{2})/);\n  const property_name = detectProperty(`${title} ${detail}`);\n\n  return {\n    description,\n    owner,\n    due_date: dueMatch ? dueMatch[1] : null,\n    property_name\n  };\n}).filter(Boolean);\n\nreturn [{\n  json: {\n    drive_file_id: doc.documentId,\n    drive_last_modified: $json.modifiedTime,\n    full_text: fullText,\n    summary_structured: {\n      changes: portfolioPerformance ? [portfolioPerformance] : [],\n      issues: issues ? [issues] : [],\n      decisions: decisions ? [decisions] : []\n    },\n    actions\n  }\n}];"
       },
       "id": "b8a48294-d49c-47c5-9723-177243d03529",
       "name": "Extract Structured Meeting Notes",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        816,
-        80
+        1056,
+        64
       ]
     },
     {
@@ -121,9 +121,24 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1168,
-        80
+        1408,
+        64
       ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        848,
+        64
+      ],
+      "id": "1b71b088-04ed-48f7-b96b-85ad0e7263d5",
+      "name": "Merge"
     }
   ],
   "connections": {
@@ -145,6 +160,11 @@
             "node": "Get a document",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
           }
         ]
       ]
@@ -164,7 +184,7 @@
       "main": [
         [
           {
-            "node": "Extract Structured Meeting Notes",
+            "node": "Merge",
             "type": "main",
             "index": 0
           }
@@ -192,6 +212,17 @@
           }
         ]
       ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Extract Structured Meeting Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -203,8 +234,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "40472dae-50a0-433a-8efb-6558d810d3eb",
-  "activeVersionId": "40472dae-50a0-433a-8efb-6558d810d3eb",
+  "versionId": "cb1aea01-d626-4668-9471-aefbbc5aa095",
+  "activeVersionId": "cb1aea01-d626-4668-9471-aefbbc5aa095",
   "triggerCount": 1,
   "shared": [
     {
@@ -216,9 +247,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-04-22T19:57:58.214Z",
-    "createdAt": "2026-04-22T19:57:49.546Z",
-    "versionId": "40472dae-50a0-433a-8efb-6558d810d3eb",
+    "updatedAt": "2026-04-28T13:25:40.217Z",
+    "createdAt": "2026-04-28T13:25:15.701Z",
+    "versionId": "cb1aea01-d626-4668-9471-aefbbc5aa095",
     "workflowId": "WFBtaAHdgBUqkE4q",
     "nodes": [
       {
@@ -228,7 +259,7 @@
         "type": "n8n-nodes-base.cron",
         "typeVersion": 1,
         "position": [
-          224,
+          256,
           80
         ]
       },
@@ -256,7 +287,7 @@
         "type": "n8n-nodes-base.googleDrive",
         "typeVersion": 3,
         "position": [
-          432,
+          464,
           80
         ],
         "credentials": {
@@ -268,15 +299,15 @@
       },
       {
         "parameters": {
-          "jsCode": "function makeUuid() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nconst item = $json;\nconst fullText = item.full_text || '';\n\n// Parse manager from title line\nconst managerMatch = fullText.match(/\\[WMMA\\]\\s*(.*?)\\s+Weekly Manager Meeting/i);\nconst manager_name = managerMatch ? managerMatch[1].trim() : null;\n\n// Parse meeting date from first line if possible\nconst firstLine = fullText.split('\\n')[0]?.trim();\nlet meetingDate = new Date(firstLine);\n\nif (isNaN(meetingDate.getTime())) {\n  meetingDate = new Date();\n}\n\n// Set meeting datetime\nconst meeting_datetime = meetingDate.toISOString().slice(0, 19).replace('T', ' ');\n\n// Derive Monday week reference\nconst d = new Date(meetingDate);\nconst day = d.getDay();\nconst diff = d.getDate() - day + (day === 0 ? -6 : 1);\nconst monday = new Date(d.setDate(diff)).toISOString().slice(0, 10);\n\nconst created_at = new Date().toISOString().slice(0, 19).replace('T', ' ');\n\nreturn [{\n  json: {\n    id: makeUuid(),\n    drive_file_id: item.drive_file_id,\n    manager_name,\n    meeting_datetime,\n    week_reference: monday,\n    transcript_raw: null,\n    full_text: item.full_text,\n    summary_structured: item.summary_structured,\n    actions: item.actions,\n    created_at\n  }\n}];"
+          "jsCode": "function makeUuid() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nconst item = $json;\nconst fullText = item.full_text || '';\n\n// Parse manager from title line\nconst managerMatch = fullText.match(/\\[WMMA\\]\\s*(.*?)\\s+Weekly Manager Meeting/i);\nconst manager_name = managerMatch ? managerMatch[1].trim() : null;\n\n// Parse meeting date from first line if possible\nconst firstLine = fullText.split('\\n')[0]?.trim();\nlet meetingDate = new Date(firstLine);\n\nif (isNaN(meetingDate.getTime())) {\n  meetingDate = new Date();\n}\n\n// Set meeting datetime\nconst meeting_datetime = meetingDate.toISOString().slice(0, 19).replace('T', ' ');\n\n// Derive Monday week reference\nconst d = new Date(meetingDate);\nconst day = d.getDay();\nconst diff = d.getDate() - day + (day === 0 ? -6 : 1);\nconst monday = new Date(d.setDate(diff)).toISOString().slice(0, 10);\n\nconst created_at = new Date().toISOString().slice(0, 19).replace('T', ' ');\n\nreturn [{\n  json: {\n    id: makeUuid(),\n    drive_file_id: item.drive_file_id,\n    drive_last_modified: item.drive_last_modified,\n    manager_name,\n    meeting_datetime,\n    week_reference: monday,\n    transcript_raw: null,\n    full_text: item.full_text,\n    summary_structured: item.summary_structured,\n    actions: item.actions,\n    created_at\n  }\n}];"
         },
         "id": "68e94027-a7f9-46b3-b9c6-e00550f9d72d",
         "name": "Parse Metadata",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          992,
-          80
+          1232,
+          64
         ]
       },
       {
@@ -289,8 +320,8 @@
         "type": "n8n-nodes-base.executeWorkflow",
         "typeVersion": 1,
         "position": [
-          1408,
-          80
+          1648,
+          64
         ]
       },
       {
@@ -302,8 +333,8 @@
         "type": "n8n-nodes-base.googleDocs",
         "typeVersion": 2,
         "position": [
-          640,
-          80
+          656,
+          -48
         ],
         "id": "4363dca8-722d-42e9-aac4-a9cfa3d7c621",
         "name": "Get a document",
@@ -316,15 +347,15 @@
       },
       {
         "parameters": {
-          "jsCode": "const doc = $json;\n\nlet fullText = '';\n\nfor (const el of doc.body?.content || []) {\n  if (el.paragraph?.elements) {\n    for (const pe of el.paragraph.elements) {\n      if (pe.textRun?.content) {\n        fullText += pe.textRun.content;\n      }\n    }\n  }\n}\n\n// Normalize\nfullText = fullText.replace(/\\r/g, '').trim();\n\n// Split sections\nfunction extractSection(text, start, endMarkers) {\n  const startIndex = text.indexOf(start);\n  if (startIndex === -1) return '';\n\n  let endIndex = text.length;\n\n  for (const marker of endMarkers) {\n    const idx = text.indexOf(marker, startIndex + start.length);\n    if (idx !== -1 && idx < endIndex) {\n      endIndex = idx;\n    }\n  }\n\n  return text.substring(startIndex + start.length, endIndex).trim();\n}\n\n// Normalize owner names to contract-safe values\nfunction normalizeOwner(owner) {\n  const v = String(owner || '').trim().toLowerCase();\n\n  if (v === 'brandon stewart' || v === 'brandon') return 'Brandon';\n  if (v === 'breanna blanks' || v === 'breanna' || v === 'brianna blanks' || v === 'brianna') return 'Breanna';\n\n  return String(owner || '').trim();\n}\n\n// Detect property from action text\nconst knownProperties = [\n  'Adobe',\n  'NorthPark',\n  'Courtyard',\n  'Jefferson',\n  'Riveredge',\n  'Crosskeys',\n  'Sagebrush',\n  'Westminster',\n  'Broadstone',\n  'Nelson',\n  'Oak Terrace',\n  'Single Families and Small Multi'\n];\n\nfunction detectProperty(text) {\n  for (const property of knownProperties) {\n    const re = new RegExp(`\\\\b${property.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\\\b`, 'i');\n    if (re.test(text)) return property;\n  }\n  return null;\n}\n\nconst portfolioPerformance = extractSection(fullText, 'Portfolio Performance', [\n  'Operational Issues',\n  'Decisions',\n  'Next steps'\n]);\n\nconst issues = extractSection(fullText, 'Operational Issues', [\n  'Decisions',\n  'Next steps'\n]);\n\nconst decisions = extractSection(fullText, 'Decisions', [\n  'Next steps'\n]);\n\nconst nextSteps = extractSection(fullText, 'Next steps', []);\n\n// Extract actions\nconst actionLines = nextSteps\n  .split('\\n')\n  .map(l => l.trim())\n  .filter(l => l.startsWith('[') && l.includes(']') && l.includes(':'));\n\nconst actions = actionLines.map(line => {\n  const match = line.match(/^\\[(.*?)\\]\\s*(.*?):\\s*(.*)$/);\n\n  if (!match) return null;\n\n  const rawOwner = match[1].trim();\n  const title = match[2].trim();\n  const detail = match[3].trim();\n\n  const owner = normalizeOwner(rawOwner);\n  const description = `${title}: ${detail}`;\n\n  const dueMatch = detail.match(/(\\d{4}-\\d{2}-\\d{2})/);\n  const property_name = detectProperty(`${title} ${detail}`);\n\n  return {\n    description,\n    owner,\n    due_date: dueMatch ? dueMatch[1] : null,\n    property_name\n  };\n}).filter(Boolean);\n\nreturn [{\n  json: {\n    drive_file_id: doc.documentId,\n    full_text: fullText,\n    summary_structured: {\n      changes: portfolioPerformance ? [portfolioPerformance] : [],\n      issues: issues ? [issues] : [],\n      decisions: decisions ? [decisions] : []\n    },\n    actions\n  }\n}];"
+          "jsCode": "const doc = $json;\n\nlet fullText = '';\n\nfor (const el of doc.body?.content || []) {\n  if (el.paragraph?.elements) {\n    for (const pe of el.paragraph.elements) {\n      if (pe.textRun?.content) {\n        fullText += pe.textRun.content;\n      }\n    }\n  }\n}\n\n// Normalize\nfullText = fullText.replace(/\\r/g, '').trim();\n\n// Split sections\nfunction extractSection(text, start, endMarkers) {\n  const startIndex = text.indexOf(start);\n  if (startIndex === -1) return '';\n\n  let endIndex = text.length;\n\n  for (const marker of endMarkers) {\n    const idx = text.indexOf(marker, startIndex + start.length);\n    if (idx !== -1 && idx < endIndex) {\n      endIndex = idx;\n    }\n  }\n\n  return text.substring(startIndex + start.length, endIndex).trim();\n}\n\n// Normalize owner names to contract-safe values\nfunction normalizeOwner(owner) {\n  const v = String(owner || '').trim().toLowerCase();\n\n  if (v === 'brandon stewart' || v === 'brandon') return 'Brandon';\n  if (v === 'breanna blanks' || v === 'breanna' || v === 'brianna blanks' || v === 'brianna') return 'Breanna';\n\n  return String(owner || '').trim();\n}\n\n// Detect property from action text\nconst knownProperties = [\n  'Adobe',\n  'NorthPark',\n  'Courtyard',\n  'Jefferson',\n  'Riveredge',\n  'Crosskeys',\n  'Sagebrush',\n  'Westminster',\n  'Broadstone',\n  'Nelson',\n  'Oak Terrace',\n  'Single Families and Small Multi'\n];\n\nfunction detectProperty(text) {\n  for (const property of knownProperties) {\n    const re = new RegExp(`\\\\b${property.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\\\b`, 'i');\n    if (re.test(text)) return property;\n  }\n  return null;\n}\n\nconst portfolioPerformance = extractSection(fullText, 'Portfolio Performance', [\n  'Operational Issues',\n  'Decisions',\n  'Next steps'\n]);\n\nconst issues = extractSection(fullText, 'Operational Issues', [\n  'Decisions',\n  'Next steps'\n]);\n\nconst decisions = extractSection(fullText, 'Decisions', [\n  'Next steps'\n]);\n\nconst nextSteps = extractSection(fullText, 'Next steps', []);\n\n// Extract actions\nconst actionLines = nextSteps\n  .split('\\n')\n  .map(l => l.trim())\n  .filter(l => l.startsWith('[') && l.includes(']') && l.includes(':'));\n\nconst actions = actionLines.map(line => {\n  const match = line.match(/^\\[(.*?)\\]\\s*(.*?):\\s*(.*)$/);\n\n  if (!match) return null;\n\n  const rawOwner = match[1].trim();\n  const title = match[2].trim();\n  const detail = match[3].trim();\n\n  const owner = normalizeOwner(rawOwner);\n  const description = `${title}: ${detail}`;\n\n  const dueMatch = detail.match(/(\\d{4}-\\d{2}-\\d{2})/);\n  const property_name = detectProperty(`${title} ${detail}`);\n\n  return {\n    description,\n    owner,\n    due_date: dueMatch ? dueMatch[1] : null,\n    property_name\n  };\n}).filter(Boolean);\n\nreturn [{\n  json: {\n    drive_file_id: doc.documentId,\n    drive_last_modified: $json.modifiedTime,\n    full_text: fullText,\n    summary_structured: {\n      changes: portfolioPerformance ? [portfolioPerformance] : [],\n      issues: issues ? [issues] : [],\n      decisions: decisions ? [decisions] : []\n    },\n    actions\n  }\n}];"
         },
         "id": "b8a48294-d49c-47c5-9723-177243d03529",
         "name": "Extract Structured Meeting Notes",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          816,
-          80
+          1056,
+          64
         ]
       },
       {
@@ -336,9 +367,24 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1168,
-          80
+          1408,
+          64
         ]
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          848,
+          64
+        ],
+        "id": "1b71b088-04ed-48f7-b96b-85ad0e7263d5",
+        "name": "Merge"
       }
     ],
     "connections": {
@@ -360,6 +406,11 @@
               "node": "Get a document",
               "type": "main",
               "index": 0
+            },
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
             }
           ]
         ]
@@ -379,7 +430,7 @@
         "main": [
           [
             {
-              "node": "Extract Structured Meeting Notes",
+              "node": "Merge",
               "type": "main",
               "index": 0
             }
@@ -407,10 +458,21 @@
             }
           ]
         ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Extract Structured Meeting Notes",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Brandon Stewart",
-    "name": "Version 40472dae",
+    "name": "Version cb1aea01",
     "description": "",
     "autosaved": true
   },
