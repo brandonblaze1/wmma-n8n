@@ -1,0 +1,241 @@
+{
+  "updatedAt": "2026-04-23T12:42:11.910Z",
+  "createdAt": "2026-04-23T12:41:36.076Z",
+  "id": "4P1nQHSRPUnnwbpy",
+  "name": "WMMA Post-Meeting Follow-Up",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "c4b92f55-5a42-405f-8979-1d7d6851c828",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const meeting = $json;\n\nconst directory = {\n  \"Brandon Stewart\": \"brandon@blazeproperty.com\",\n  \"Amy\": \"amy@blazeproperty.com\",\n  \"Breanna\": \"breanna@blazeproperty.com\",\n  \"Debbie\": \"debbie@blazeproperty.com\",\n  \"Dede\": \"dede@blazeproperty.com\",\n  \"Shelbie\": \"shelbie@blazeproperty.com\",\n  \"Chris\": \"chris@blazeproperty.com\",\n  \"Ashlie\": \"ashlie@blazeproperty.com\"\n};\n\nconst required = [\"brandon@blazeproperty.com\"];\n\nconst participants = meeting.participants || [];\n\nconst resolved = [];\n\nfor (const p of participants) {\n  if (!p) continue;\n  const v = String(p).trim();\n\n  if (v.includes('@')) {\n    resolved.push(v.toLowerCase());\n    continue;\n  }\n\n  if (directory[v]) {\n    resolved.push(directory[v]);\n  }\n}\n\nconst fallback = directory[meeting.manager_name];\nif (fallback) resolved.push(fallback);\n\nconst recipients = [...new Set([...required, ...resolved])];\n\nreturn [{ json: { ...meeting, recipients } }];"
+      },
+      "id": "4ff4d9c9-46c6-4d91-bb29-09c99f344263",
+      "name": "Resolve Recipients",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const m = $json;\n\nconst formatList = (arr) => arr && arr.length ? arr.map(i => `• ${i}`).join('<br>') : 'None';\n\nconst changes = formatList(m.summary_structured?.changes);\nconst issues = formatList(m.summary_structured?.issues);\nconst decisions = formatList(m.summary_structured?.decisions);\n\nconst actions = (m.actions || []).map(a => `\n  <div style=\"margin-bottom:10px;\">\n    <b>${a.description}</b><br>\n    Owner: ${a.owner}<br>\n    Due: ${a.due_date}${a.property_name ? `<br>Property: ${a.property_name}` : ''}\n  </div>\n`).join('');\n\nconst body = `\n<div style=\"font-family:Arial;font-size:14px;\">\n\n<p><b>Meeting Follow-Up – ${m.manager_name}</b></p>\n\n<h3>Summary</h3>\n${changes}\n\n<h3>Key Issues</h3>\n${issues}\n\n<h3>Decisions</h3>\n${decisions}\n\n<h3>Action Items</h3>\n${actions}\n\n<p>Please review and begin execution on assigned items immediately.</p>\n\n<p>- Brandon</p>\n</div>\n`;\n\nconst dt = new Date(m.meeting_datetime);\nconst subject = `Meeting Follow-Up – ${m.manager_name} – ${dt.toLocaleDateString()}`;\n\nreturn [{ json: { ...m, subject, body } }];"
+      },
+      "id": "77646eae-4191-4690-b729-541835e2e56d",
+      "name": "Build Email Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.recipients.join(',') }}",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "67a6e436-fb2b-4457-955c-70347117da23",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        752,
+        0
+      ],
+      "webhookId": "e6c3e198-bba0-4a6e-8a09-67832cdedac3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "LD5x69eYRRI6cdrn",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Resolve Recipients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Recipients": {
+      "main": [
+        [
+          {
+            "node": "Build Email Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Email Content": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "87bf9c48-8858-44ba-ae7c-0a3769a51244",
+  "activeVersionId": "87bf9c48-8858-44ba-ae7c-0a3769a51244",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-04-23T12:41:36.076Z",
+      "createdAt": "2026-04-23T12:41:36.076Z",
+      "role": "workflow:owner",
+      "workflowId": "4P1nQHSRPUnnwbpy",
+      "projectId": "4YBqTudLOBUQfTvU"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-04-23T12:41:56.845Z",
+    "createdAt": "2026-04-23T12:41:54.667Z",
+    "versionId": "87bf9c48-8858-44ba-ae7c-0a3769a51244",
+    "workflowId": "4P1nQHSRPUnnwbpy",
+    "nodes": [
+      {
+        "parameters": {},
+        "id": "c4b92f55-5a42-405f-8979-1d7d6851c828",
+        "name": "Execute Workflow Trigger",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const meeting = $json;\n\nconst directory = {\n  \"Brandon Stewart\": \"brandon@blazeproperty.com\",\n  \"Amy\": \"amy@blazeproperty.com\",\n  \"Breanna\": \"breanna@blazeproperty.com\",\n  \"Debbie\": \"debbie@blazeproperty.com\",\n  \"Dede\": \"dede@blazeproperty.com\",\n  \"Shelbie\": \"shelbie@blazeproperty.com\",\n  \"Chris\": \"chris@blazeproperty.com\",\n  \"Ashlie\": \"ashlie@blazeproperty.com\"\n};\n\nconst required = [\"brandon@blazeproperty.com\"];\n\nconst participants = meeting.participants || [];\n\nconst resolved = [];\n\nfor (const p of participants) {\n  if (!p) continue;\n  const v = String(p).trim();\n\n  if (v.includes('@')) {\n    resolved.push(v.toLowerCase());\n    continue;\n  }\n\n  if (directory[v]) {\n    resolved.push(directory[v]);\n  }\n}\n\nconst fallback = directory[meeting.manager_name];\nif (fallback) resolved.push(fallback);\n\nconst recipients = [...new Set([...required, ...resolved])];\n\nreturn [{ json: { ...meeting, recipients } }];"
+        },
+        "id": "4ff4d9c9-46c6-4d91-bb29-09c99f344263",
+        "name": "Resolve Recipients",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          256,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const m = $json;\n\nconst formatList = (arr) => arr && arr.length ? arr.map(i => `• ${i}`).join('<br>') : 'None';\n\nconst changes = formatList(m.summary_structured?.changes);\nconst issues = formatList(m.summary_structured?.issues);\nconst decisions = formatList(m.summary_structured?.decisions);\n\nconst actions = (m.actions || []).map(a => `\n  <div style=\"margin-bottom:10px;\">\n    <b>${a.description}</b><br>\n    Owner: ${a.owner}<br>\n    Due: ${a.due_date}${a.property_name ? `<br>Property: ${a.property_name}` : ''}\n  </div>\n`).join('');\n\nconst body = `\n<div style=\"font-family:Arial;font-size:14px;\">\n\n<p><b>Meeting Follow-Up – ${m.manager_name}</b></p>\n\n<h3>Summary</h3>\n${changes}\n\n<h3>Key Issues</h3>\n${issues}\n\n<h3>Decisions</h3>\n${decisions}\n\n<h3>Action Items</h3>\n${actions}\n\n<p>Please review and begin execution on assigned items immediately.</p>\n\n<p>- Brandon</p>\n</div>\n`;\n\nconst dt = new Date(m.meeting_datetime);\nconst subject = `Meeting Follow-Up – ${m.manager_name} – ${dt.toLocaleDateString()}`;\n\nreturn [{ json: { ...m, subject, body } }];"
+        },
+        "id": "77646eae-4191-4690-b729-541835e2e56d",
+        "name": "Build Email Content",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          512,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $json.recipients.join(',') }}",
+          "subject": "={{ $json.subject }}",
+          "message": "={{ $json.body }}",
+          "options": {}
+        },
+        "id": "67a6e436-fb2b-4457-955c-70347117da23",
+        "name": "Send Email",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2,
+        "position": [
+          752,
+          0
+        ],
+        "webhookId": "e6c3e198-bba0-4a6e-8a09-67832cdedac3",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "LD5x69eYRRI6cdrn",
+            "name": "Gmail account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Execute Workflow Trigger": {
+        "main": [
+          [
+            {
+              "node": "Resolve Recipients",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Resolve Recipients": {
+        "main": [
+          [
+            {
+              "node": "Build Email Content",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Email Content": {
+        "main": [
+          [
+            {
+              "node": "Send Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Brandon Stewart",
+    "name": "Version 87bf9c48",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": [
+    {
+      "updatedAt": "2026-04-23T12:40:11.767Z",
+      "createdAt": "2026-04-23T12:40:11.767Z",
+      "id": "nwYcKrWKYFiGYTIf",
+      "name": "Meeting Workflow"
+    }
+  ]
+}
