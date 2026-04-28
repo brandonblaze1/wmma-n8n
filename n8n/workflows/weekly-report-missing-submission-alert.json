@@ -1,0 +1,377 @@
+{
+  "updatedAt": "2026-04-27T21:22:06.671Z",
+  "createdAt": "2026-04-22T20:16:14.811Z",
+  "id": "NOh3cvXUPtzX1DcC",
+  "name": "WMMA Weekly Report Missing Submission Alert",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 10,
+              "triggerAtMinute": 5
+            }
+          ]
+        }
+      },
+      "id": "60b91659-3c4d-4460-a75d-cb0bcfec4392",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        288,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date();\nconst d = new Date(now);\nconst day = d.getDay();\nconst diff = d.getDate() - day + (day === 0 ? -6 : 1);\nconst monday = new Date(d.setDate(diff));\nconst week_reference = monday.toISOString().slice(0, 10);\n\nreturn [{\n  json: {\n    week_reference,\n    webhook_url: 'https://chat.googleapis.com/v1/spaces/AAQAjMVKEJE/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=DG5MQDsVLb3fVgOkfjvxtwDzTN715tVtBa1Yv9BoDv0'\n  }\n}];"
+      },
+      "id": "79d222a3-be27-4ee5-91a1-92c34537c57f",
+      "name": "Build Week Reference",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT DISTINCT manager_name\nFROM manager_weekly_reports\nWHERE week_start_date = $1;",
+        "options": {
+          "queryReplacement": "={{ [$json.week_reference] }}"
+        }
+      },
+      "id": "080b0e35-d48a-4e42-9dab-23ea16c10060",
+      "name": "Fetch Submitted Managers",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        800,
+        128
+      ],
+      "credentials": {
+        "mySql": {
+          "id": "f3UzvmAj6M8o27XN",
+          "name": "Blaze_Ops Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const expectedManagers = [\n  'Breanna',\n  'Amy',\n  'Debbie',\n  'Dede',\n  'Shelbie/Chris',\n  'Ashlie'\n];\n\nconst submitted = $input.all().map(i => i.json.manager_name).filter(Boolean);\nconst missing = expectedManagers.filter(name => !submitted.includes(name));\nconst week_reference = $('Build Week Reference').item.json.week_reference;\nconst webhook_url = $('Build Week Reference').item.json.webhook_url;\n\nreturn [{\n  json: {\n    week_reference,\n    webhook_url,\n    expectedManagers,\n    submitted,\n    missing,\n    total_expected: expectedManagers.length,\n    total_submitted: submitted.length\n  }\n}];"
+      },
+      "id": "90bc2885-e133-4184-9fd9-f4221de5b513",
+      "name": "Compare Submissions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const {\n  missing,\n  submitted,\n  total_submitted,\n  total_expected,\n  week_reference,\n  webhook_url\n} = $json;\n\nconst submittedBlock = submitted.length\n  ? submitted.map(name => `• ${name}`).join('<br>')\n  : 'None';\n\nconst missingBlock = missing.length\n  ? missing.map(name => `• ${name}`).join('<br>')\n  : 'None';\n\nconst praiseText = submitted.length\n  ? `<b>Nice work to those already submitted.</b> Thank you for getting your weekly report in on time.`\n  : `<b>No reports have been submitted yet.</b>`;\n\nreturn [{\n  json: {\n    webhook_url,\n    payload: {\n      cardsV2: [\n        {\n          cardId: 'weekly-report-status',\n          card: {\n            header: {\n              title: 'Weekly Reporting Status',\n              subtitle: `Week of ${week_reference} • Submitted: ${total_submitted} / ${total_expected}`,\n              imageUrl: 'https://blaze-assets.sfo3.cdn.digitaloceanspaces.com/blaze-logo-mark.png',\n              imageType: 'CIRCLE'\n            },\n            sections: [\n              {\n                widgets: [\n                  {\n                    textParagraph: {\n                      text: praiseText\n                    }\n                  },\n                  {\n                    textParagraph: {\n                      text: `<b>Submitted</b><br><br>${submittedBlock}`\n                    }\n                  },\n                  {\n                    textParagraph: {\n                      text: `<b>Still Missing</b><br><br>${missingBlock}`\n                    }\n                  },\n                  {\n                    textParagraph: {\n                      text: `Weekly reports are due every Monday by <b>10:00 AM</b>.`\n                    }\n                  },\n                  {\n                    buttonList: {\n                      buttons: [\n                        {\n                          text: 'Open Weekly Report',\n                          onClick: {\n                            openLink: {\n                              url: 'https://blzres.com/weekly-reporting/'\n                            }\n                          }\n                        }\n                      ]\n                    }\n                  }\n                ]\n              }\n            ]\n          }\n        }\n      ]\n    }\n  }\n}];"
+      },
+      "id": "e5e0dd22-5998-4e2b-ae4f-4723a56349f1",
+      "name": "Build Chat Card",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1312,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.webhook_url }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.payload }}",
+        "options": {}
+      },
+      "id": "cb8a8c29-fbf1-44e1-a3b4-1a8d4fb09b35",
+      "name": "Post to Google Chat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1568,
+        128
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build Week Reference",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Week Reference": {
+      "main": [
+        [
+          {
+            "node": "Fetch Submitted Managers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Submitted Managers": {
+      "main": [
+        [
+          {
+            "node": "Compare Submissions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare Submissions": {
+      "main": [
+        [
+          {
+            "node": "Build Chat Card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Chat Card": {
+      "main": [
+        [
+          {
+            "node": "Post to Google Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "326057bb-0fa2-46f6-8c2e-1b3a4fce3d48",
+  "activeVersionId": "326057bb-0fa2-46f6-8c2e-1b3a4fce3d48",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-04-22T20:16:14.811Z",
+      "createdAt": "2026-04-22T20:16:14.811Z",
+      "role": "workflow:owner",
+      "workflowId": "NOh3cvXUPtzX1DcC",
+      "projectId": "4YBqTudLOBUQfTvU"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-04-23T11:10:08.111Z",
+    "createdAt": "2026-04-22T20:21:04.852Z",
+    "versionId": "326057bb-0fa2-46f6-8c2e-1b3a4fce3d48",
+    "workflowId": "NOh3cvXUPtzX1DcC",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "weeks",
+                "triggerAtDay": [
+                  1
+                ],
+                "triggerAtHour": 10,
+                "triggerAtMinute": 5
+              }
+            ]
+          }
+        },
+        "id": "60b91659-3c4d-4460-a75d-cb0bcfec4392",
+        "name": "Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          288,
+          128
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const now = new Date();\nconst d = new Date(now);\nconst day = d.getDay();\nconst diff = d.getDate() - day + (day === 0 ? -6 : 1);\nconst monday = new Date(d.setDate(diff));\nconst week_reference = monday.toISOString().slice(0, 10);\n\nreturn [{\n  json: {\n    week_reference,\n    webhook_url: 'https://chat.googleapis.com/v1/spaces/AAQAjMVKEJE/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=DG5MQDsVLb3fVgOkfjvxtwDzTN715tVtBa1Yv9BoDv0'\n  }\n}];"
+        },
+        "id": "79d222a3-be27-4ee5-91a1-92c34537c57f",
+        "name": "Build Week Reference",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          544,
+          128
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT DISTINCT manager_name\nFROM manager_weekly_reports\nWHERE week_start_date = $1;",
+          "options": {
+            "queryReplacement": "={{ [$json.week_reference] }}"
+          }
+        },
+        "id": "080b0e35-d48a-4e42-9dab-23ea16c10060",
+        "name": "Fetch Submitted Managers",
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          800,
+          128
+        ],
+        "credentials": {
+          "mySql": {
+            "id": "f3UzvmAj6M8o27XN",
+            "name": "Blaze_Ops Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const expectedManagers = [\n  'Breanna',\n  'Amy',\n  'Debbie',\n  'Dede',\n  'Shelbie/Chris',\n  'Ashlie'\n];\n\nconst submitted = $input.all().map(i => i.json.manager_name).filter(Boolean);\nconst missing = expectedManagers.filter(name => !submitted.includes(name));\nconst week_reference = $('Build Week Reference').item.json.week_reference;\nconst webhook_url = $('Build Week Reference').item.json.webhook_url;\n\nreturn [{\n  json: {\n    week_reference,\n    webhook_url,\n    expectedManagers,\n    submitted,\n    missing,\n    total_expected: expectedManagers.length,\n    total_submitted: submitted.length\n  }\n}];"
+        },
+        "id": "90bc2885-e133-4184-9fd9-f4221de5b513",
+        "name": "Compare Submissions",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1056,
+          128
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const {\n  missing,\n  submitted,\n  total_submitted,\n  total_expected,\n  week_reference,\n  webhook_url\n} = $json;\n\nconst submittedBlock = submitted.length\n  ? submitted.map(name => `• ${name}`).join('<br>')\n  : 'None';\n\nconst missingBlock = missing.length\n  ? missing.map(name => `• ${name}`).join('<br>')\n  : 'None';\n\nconst praiseText = submitted.length\n  ? `<b>Nice work to those already submitted.</b> Thank you for getting your weekly report in on time.`\n  : `<b>No reports have been submitted yet.</b>`;\n\nreturn [{\n  json: {\n    webhook_url,\n    payload: {\n      cardsV2: [\n        {\n          cardId: 'weekly-report-status',\n          card: {\n            header: {\n              title: 'Weekly Reporting Status',\n              subtitle: `Week of ${week_reference} • Submitted: ${total_submitted} / ${total_expected}`,\n              imageUrl: 'https://blaze-assets.sfo3.cdn.digitaloceanspaces.com/blaze-logo-mark.png',\n              imageType: 'CIRCLE'\n            },\n            sections: [\n              {\n                widgets: [\n                  {\n                    textParagraph: {\n                      text: praiseText\n                    }\n                  },\n                  {\n                    textParagraph: {\n                      text: `<b>Submitted</b><br><br>${submittedBlock}`\n                    }\n                  },\n                  {\n                    textParagraph: {\n                      text: `<b>Still Missing</b><br><br>${missingBlock}`\n                    }\n                  },\n                  {\n                    textParagraph: {\n                      text: `Weekly reports are due every Monday by <b>10:00 AM</b>.`\n                    }\n                  },\n                  {\n                    buttonList: {\n                      buttons: [\n                        {\n                          text: 'Open Weekly Report',\n                          onClick: {\n                            openLink: {\n                              url: 'https://blzres.com/weekly-reporting/'\n                            }\n                          }\n                        }\n                      ]\n                    }\n                  }\n                ]\n              }\n            ]\n          }\n        }\n      ]\n    }\n  }\n}];"
+        },
+        "id": "e5e0dd22-5998-4e2b-ae4f-4723a56349f1",
+        "name": "Build Chat Card",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1312,
+          128
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $json.webhook_url }}",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ $json.payload }}",
+          "options": {}
+        },
+        "id": "cb8a8c29-fbf1-44e1-a3b4-1a8d4fb09b35",
+        "name": "Post to Google Chat",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1568,
+          128
+        ]
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Build Week Reference",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Week Reference": {
+        "main": [
+          [
+            {
+              "node": "Fetch Submitted Managers",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Submitted Managers": {
+        "main": [
+          [
+            {
+              "node": "Compare Submissions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Compare Submissions": {
+        "main": [
+          [
+            {
+              "node": "Build Chat Card",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Chat Card": {
+        "main": [
+          [
+            {
+              "node": "Post to Google Chat",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Brandon Stewart",
+    "name": "Version 326057bb",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": [
+    {
+      "updatedAt": "2026-04-23T12:40:11.767Z",
+      "createdAt": "2026-04-23T12:40:11.767Z",
+      "id": "nwYcKrWKYFiGYTIf",
+      "name": "Meeting Workflow"
+    }
+  ]
+}
