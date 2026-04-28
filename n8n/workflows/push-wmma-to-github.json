@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-28T12:52:54.884Z",
+  "updatedAt": "2026-04-28T13:06:59.009Z",
   "createdAt": "2026-04-27T21:15:40.483Z",
   "id": "MjZQPHZJbjZBPZAj",
   "name": "Push WMMA to Github",
@@ -11,7 +11,7 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -400,
+        -384,
         48
       ],
       "id": "0b3d573d-4ee2-4eb0-8396-70cbc56a8fdc",
@@ -318,7 +318,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "fe51c2ec-1bb9-436e-b41a-f5d10cffd69c",
+  "versionId": "c51f81ff-a0e2-447f-aa41-645c5d0b6f90",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
@@ -331,5 +331,12 @@
     }
   ],
   "activeVersion": null,
-  "tags": []
+  "tags": [
+    {
+      "updatedAt": "2026-04-28T13:06:55.412Z",
+      "createdAt": "2026-04-28T13:06:55.412Z",
+      "id": "CK8HIMwXO7fn3rDk",
+      "name": "github"
+    }
+  ]
 }
