@@ -1,270 +1,266 @@
-# WMMA N8N — Weekly Manager Meeting Automation
+# WMMA – Weekly Manager Meeting Automation
 
-This project powers the **Weekly Manager Meeting & Reporting System (WMMA)** for Blaze Real Estate.
+## Overview
 
-It creates a structured, repeatable workflow that connects:
-- Weekly property reporting
-- Meeting preparation
-- Meeting execution
-- Post-meeting accountability
+The **Weekly Manager Meeting Automation (WMMA)** system generates and delivers pre-meeting briefing emails to property managers.
 
-The goal is simple:
+Each email includes:
 
-> **Clarity → Alignment → Execution → Accountability**
+* Portfolio snapshot (vacancy, delinquency, turns, work orders)
+* Upcoming operational deadlines (calendar-aware)
+* Open action items from prior meetings
 
----
+This system is designed to be:
 
-# 🧠 What This System Does
-
-This system replaces informal meetings and disconnected data with a **consistent weekly operating cycle**.
-
-It ensures:
-
-- Managers submit a standardized weekly report
-- Leadership receives structured visibility before meetings
-- Meetings produce clear decisions and action items
-- Action items are tracked and revisited weekly
+* Deterministic
+* Idempotent
+* Retry-safe
+* Operationally reliable
 
 ---
 
-# 🔁 System Overview
+## Core Workflow
 
-The system runs in a continuous loop: Manager Input → System Processing → Leadership Visibility → Meeting → Action Items → Follow-Up → Next Week
-
-
-Each step feeds the next. Nothing is lost, and nothing resets.
-
----
-
-# ⚙️ Core Workflows
-
-## 1. Weekly Report Intake
-
-**Purpose:**
-Capture structured weekly data from managers.
-
-**Input:**
-- Manager submission (via form or API)
-
-**Output:**
-- Rows inserted into `manager_weekly_reports`
-
-**Key Data:**
-- Vacancies (ready vs not ready)
-- Delinquency (count + amount)
-- Turns in progress
-- Work orders > 7 days
-- Issues / help needed / struggling units
+```text
+Schedule Trigger
+  ↓
+Find Upcoming Meetings (12–24 hour window)
+  ↓
+Pass Through Meetings
+  ├─ Fetch Snapshot
+  ├─ Fetch Recent Actions
+  └─ Fetch Operational Holidays
+          ↓
+    Build Operational Deadlines
+          ↓
+        Build Email
+          ↓
+    Build Email Log Row
+          ↓
+      Insert Email Log (LOCK)
+          ↓
+        Email Resolver
+          ↓
+         Send Email
+         ├─ Success → Update Email Log Sent Timestamp
+         └─ Error   → Update Email Log Failed
+```
 
 ---
 
-## 2. Pre-Meeting Briefing
+## Key Design Principles
 
-**Purpose:**
-Prepare leadership and managers for the upcoming meeting.
+### 1. Idempotent Email Sending
 
-**Triggered:**
-Scheduled (typically Monday or pre-meeting window)
+Emails are locked before sending:
 
-**Process:**
-1. Find upcoming meetings
-2. Fetch weekly report snapshot
-3. Fetch prior action items
-4. Calculate operational deadlines (1st / 5th / 10th)
-5. Generate structured email
+```sql
+INSERT INTO pre_meeting_email_log (...)
+ON DUPLICATE KEY UPDATE meeting_id = meeting_id;
+```
 
-**Output:**
-- Pre-meeting briefing email
-
-**Includes:**
-- Portfolio snapshot
-- Prior action items
-- Upcoming operational deadlines
+* Prevents duplicate sends
+* Safe under concurrency
+* Guarantees one email per meeting
 
 ---
 
-## 3. Meeting Processing (Drive + AI)
+### 2. Truthful Logging
 
-**Purpose:**
-Convert meeting notes into structured data.
+| Stage   | Status | Timestamp |
+| ------- | ------ | --------- |
+| Insert  | failed | NULL      |
+| Success | sent   | NOW()     |
+| Failure | failed | NULL      |
 
-**Input:**
-- Google Docs (Notes + Transcript tabs)
-- Tagged with `[WMMA]`
-
-**Process:**
-1. Fetch document from Google Drive
-2. Extract Notes tab content
-3. Parse structured sections:
-   - Summary
-   - Issues
-   - Decisions
-   - Next Steps
-4. Extract action items
-5. Validate and normalize data
-6. Insert into database
-
-**Output Tables:**
-- `manager_meetings`
-- `manager_meeting_actions`
+* No false “sent” records
+* System reflects actual delivery state
 
 ---
 
-## 4. Post-Meeting Follow-Up
+### 3. Retry Logic
 
-**Purpose:**
-Send clear execution instructions after the meeting.
+Failed emails automatically retry via:
 
-**Triggered:**
-Immediately after meeting processing
+```sql
+WHERE (
+  pel.id IS NULL
+  OR (
+    pel.email_status = 'failed'
+    AND pel.email_sent_timestamp IS NULL
+  )
+)
+```
 
-**Output:**
-- Follow-up email
-
-**Includes:**
-- Summary
-- Issues
-- Decisions
-- Action items (owner + due date)
-
----
-
-## 5. Weekly Accountability Loop
-
-**Purpose:**
-Ensure nothing is forgotten.
-
-Each week:
-- Previous actions are pulled into the next pre-meeting email
-- Status is reviewed
-- New actions are assigned
+* Retries only within valid meeting window (12–24 hours prior)
+* No manual intervention required
 
 ---
 
-# 📅 Operational Deadlines
+### 4. Execution Safety
 
-The system tracks recurring operational tasks:
+All upstream data sources are explicitly connected:
 
-| Task | Default Date |
-|------|-------------|
-| Rent Due | 1st |
-| Late Notices | 5th |
-| Evictions Filed | 10th |
+```text
+Fetch Snapshot
+Fetch Recent Actions
+Fetch Operational Holidays
+        ↓
+Build Operational Deadlines
+```
 
-### Rules:
-- Adjusted for weekends
-- Adjusted for holidays (via `operational_holidays` table)
-- Surface in meetings if within 7 days
-
----
-
-# 🧱 Database Structure
-
-### Core Tables
-
-- `manager_weekly_reports`
-- `manager_meetings`
-- `manager_meeting_actions`
-- `operational_holidays`
-
-### Relationships
-manager_meetings.id
-↓
-manager_meeting_actions.meeting_id
-
+* No reliance on implicit execution
+* Prevents missing data in emails
 
 ---
 
-# 🔄 Flow Order (End-to-End)
+### 5. Data Separation (No Merge Corruption)
 
-## Weekly Cycle
+Datasets are accessed directly inside nodes:
 
-### Step 1 — Manager Submission
-- Weekly report submitted
-- Data stored in `manager_weekly_reports`
+```js
+$('Fetch Snapshot').all()
+$('Fetch Recent Actions').all()
+```
 
----
-
-### Step 2 — Pre-Meeting Briefing
-- System compiles:
-  - Snapshot
-  - Prior actions
-  - Operational deadlines
-- Email sent to manager + leadership
+* Avoids incorrect row pairing
+* Keeps datasets clean and independent
 
 ---
 
-### Step 3 — Meeting Occurs
-- Conducted via Google Meet
-- Notes recorded in Google Docs
+## Database Tables
+
+### manager_meetings
+
+* Stores scheduled meetings
+* Drives workflow execution
+
+### manager_weekly_reports
+
+* Snapshot data (vacancy, delinquency, etc.)
+
+### manager_meeting_actions
+
+* Tracks action items across meetings
+
+### operational_holidays
+
+* Used for deadline adjustment logic
+
+### pre_meeting_email_log
+
+* Controls send state and retry behavior
 
 ---
 
-### Step 4 — Meeting Processing
-- Notes ingested from Drive
-- Structured data extracted
-- Actions created and stored
+## Required Constraint
+
+```sql
+ALTER TABLE pre_meeting_email_log
+ADD UNIQUE KEY uniq_meeting_id (meeting_id);
+```
+
+This is critical for:
+
+* Idempotency
+* Duplicate prevention
+* Safe retries
 
 ---
 
-### Step 5 — Post-Meeting Email
-- Summary + actions sent
-- Defines next 7 days of execution
+## Email Content Structure
+
+Each email contains:
+
+### 1. Portfolio Snapshot
+
+* Vacants (ready vs not ready)
+* Delinquency (count + total)
+* Turns in progress
+* Aging work orders
+
+### 2. Operational Deadlines
+
+* Rent due
+* Late notices
+* Eviction filing
+* Adjusted for weekends and holidays
+
+### 3. Open Action Items
+
+* Pulled by manager
+* Filtered to `open` and `overdue`
 
 ---
 
-### Step 6 — Next Week
-- Previous actions reviewed
-- Cycle repeats
+## Recipient Resolution
+
+Recipients are built from:
+
+* Required internal stakeholders
+* Meeting participants (if provided)
+* Manager fallback
+
+Deduplicated automatically.
 
 ---
 
-# 🧩 Key Design Principles
+## Testing (Recommended)
 
-## 1. Single Source of Truth
-MySQL stores all operational data.
+Seed test data before first run:
 
-## 2. Structured Inputs Only
-No free-form reporting. All data is standardized.
+```sql
+-- Insert meeting within 12–24 hours
+-- Insert snapshot data
+-- Insert at least one open action
+```
 
-## 3. Meetings = Execution
-Meetings are not for discussion—they produce actions.
+Then trigger workflow manually and verify:
 
-## 4. Visibility Drives Accountability
-- Managers see their performance
-- Leadership sees across properties
-
-## 5. System > Memory
-Nothing relies on recall or manual tracking.
+* Email content
+* Log insertion
+* Status updates
 
 ---
 
-# 🚀 Future Enhancements
+## Known Limitations (v1)
 
-- Holiday auto-sync / API integration
-- Missed deadline escalation workflows
-- Manager performance dashboards
-- Action completion tracking automation
-- Slack / Google Chat integrations
+* No action diffing (new vs updated actions not tracked)
+* No escalation/alerting on failure (manual visibility required)
+* No version history for meeting outputs
 
 ---
 
-# 📌 Summary
+## Future Enhancements
 
-This system creates a **repeatable operating rhythm**:
+Planned upgrades:
 
-- Report → Review → Decide → Act → Repeat
+1. Action Diffing Engine
 
-It ensures:
-- Clear visibility
-- Structured meetings
-- Consistent execution
-- Real accountability
+   * Detect changes vs duplicates
+   * Preserve completion state
+   * Track due date modifications
+
+2. Failure Notifications
+
+   * Slack / email alerts on send failure
+
+3. Audit & Versioning
+
+   * Track changes across meeting cycles
 
 ---
 
-# 🏁 Final Thought
+## Summary
 
-> If it’s discussed, it becomes action.  
-> If it’s assigned, it’s tracked.  
-> If it’s tracked, it gets done.
+This system is designed to:
+
+* Deliver consistent, accurate pre-meeting briefings
+* Prevent duplicate or missed communications
+* Provide reliable operational visibility
+
+It is intentionally simple, stable, and production-safe.
+
+---
+
+**Status: Production Ready (v1)**
