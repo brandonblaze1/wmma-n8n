@@ -1,0 +1,335 @@
+{
+  "updatedAt": "2026-04-28T12:52:54.884Z",
+  "createdAt": "2026-04-27T21:15:40.483Z",
+  "id": "MjZQPHZJbjZBPZAj",
+  "name": "Push WMMA to Github",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        48
+      ],
+      "id": "0b3d573d-4ee2-4eb0-8396-70cbc56a8fdc",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "filters": {
+          "name": "WMMA"
+        },
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        48
+      ],
+      "id": "a90de9a1-282d-435f-a5de-5f105fe7f590",
+      "name": "Get WMMA Workflows",
+      "notesInFlow": true,
+      "credentials": {
+        "n8nApi": {
+          "id": "G5CURZc1CbGuGHUN",
+          "name": "n8n account 2"
+        }
+      },
+      "notes": "Only with WMMA in the name\n"
+    },
+    {
+      "parameters": {
+        "jsCode": "const workflow = $json;\n\nconst cleanName = workflow.name\n  .replace(/^WMMA\\s*(\\/|-|:)?\\s*/i, '')\n  .toLowerCase()\n  .replace(/[^a-z0-9]+/g, '-')\n  .replace(/^-+|-+$/g, '');\n\nreturn [{\n  json: {\n    workflow_id: workflow.id,\n    workflow_name: workflow.name,\n    github_path: `n8n/workflows/${cleanName || workflow.id}.json`,\n    file_content: JSON.stringify(workflow, null, 2),\n    commit_message: `Update WMMA workflow: ${workflow.name}`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        48
+      ],
+      "id": "28888a0c-9c43-41c2-97a3-1c9af6eaf10f",
+      "name": "format for GitHub"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "brandonblaze1",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "wmma-n8n",
+          "mode": "name"
+        },
+        "filePath": "={{$json.github_path}}",
+        "additionalParameters": {}
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        48
+      ],
+      "id": "36a07a7a-6a29-4109-ac03-d30cf21c1561",
+      "name": "Get a file",
+      "webhookId": "ea8d376d-3659-41b3-a67b-fe0cdb9de20b",
+      "credentials": {
+        "githubApi": {
+          "id": "tc844L9IUnwi1x61",
+          "name": "GitHub account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "67f83904-07b0-4993-a9c3-212844dd4edd",
+              "leftValue": "={{ !!$binary.data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        608,
+        48
+      ],
+      "id": "ea30cf0f-b50f-479f-b4c6-00ac2f1e7da7",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "value": "brandonblaze1",
+          "mode": "list",
+          "cachedResultName": "brandonblaze1",
+          "cachedResultUrl": "https://github.com/brandonblaze1"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "wmma-n8n",
+          "mode": "list",
+          "cachedResultName": "wmma-n8n",
+          "cachedResultUrl": "https://github.com/brandonblaze1/wmma-n8n"
+        },
+        "filePath": "={{$node[\"format for GitHub\"].json.github_path}}",
+        "fileContent": "={{$node[\"format for GitHub\"].json.file_content}}",
+        "commitMessage": "={{$node[\"format for GitHub\"].json.commit_message}}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        816,
+        -144
+      ],
+      "id": "583c8a1e-7182-417c-915b-302254bea130",
+      "name": "Edit a file",
+      "webhookId": "ed2fa53a-93d2-4b97-a318-95c29023fde1",
+      "credentials": {
+        "githubApi": {
+          "id": "tc844L9IUnwi1x61",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "owner": {
+          "__rl": true,
+          "value": "brandonblaze1",
+          "mode": "list",
+          "cachedResultName": "brandonblaze1",
+          "cachedResultUrl": "https://github.com/brandonblaze1"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "wmma-n8n",
+          "mode": "list",
+          "cachedResultName": "wmma-n8n",
+          "cachedResultUrl": "https://github.com/brandonblaze1/wmma-n8n"
+        },
+        "filePath": "={{$node[\"format for GitHub\"].json.github_path}}",
+        "fileContent": "={{$node[\"format for GitHub\"].json.file_content}}",
+        "commitMessage": "={{$node[\"format for GitHub\"].json.commit_message}}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        816,
+        112
+      ],
+      "id": "4692dda6-2d14-4be6-9894-449b4b9512a8",
+      "name": "Create a file",
+      "webhookId": "fd233fb7-6a76-4c2b-ae1b-09540834133c",
+      "credentials": {
+        "githubApi": {
+          "id": "tc844L9IUnwi1x61",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        16,
+        48
+      ],
+      "id": "8b20be52-2c7d-41fb-bf33-10eae6a34dbc",
+      "name": "Loop Over Items"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get WMMA Workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get WMMA Workflows": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "format for GitHub": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit a file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "format for GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit a file": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a file": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "fe51c2ec-1bb9-436e-b41a-f5d10cffd69c",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-04-27T21:15:40.483Z",
+      "createdAt": "2026-04-27T21:15:40.483Z",
+      "role": "workflow:owner",
+      "workflowId": "MjZQPHZJbjZBPZAj",
+      "projectId": "4YBqTudLOBUQfTvU"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
