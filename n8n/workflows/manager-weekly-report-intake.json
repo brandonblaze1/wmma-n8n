@@ -1,0 +1,257 @@
+{
+  "updatedAt": "2026-04-27T21:21:54.410Z",
+  "createdAt": "2026-04-22T15:34:01.105Z",
+  "id": "SDSoESzsSfL87W36",
+  "name": "WMMA Manager Weekly Report Intake",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "manager-weekly-report-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "31cf6e68-c1ea-4702-a698-fd23dcd46724",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "5540db84-f8fc-41ef-abb0-a2f02339555d"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst body = $json.body ?? $json;\nconst portfolioMap = {\n  \"Breanna\": [\"Courtyard\", \"Adobe\", \"NorthPark\"],\n  \"Amy\": [\"Jefferson\", \"Riveredge\", \"Crosskeys\"],\n  \"Debbie\": [\"Sagebrush\"],\n  \"Dede\": [\"Westminster\", \"Broadstone\", \"Nelson\"],\n  \"Shelbie/Chris\": [\"Oak Terrace\"],\n  \"Ashlie\": [\"Single Families and Small Multi\"]\n};\n\nfunction isMonday(dateStr) {\n  const d = new Date(`${dateStr}T00:00:00`);\n  return !Number.isNaN(d.getTime()) && d.getDay() === 1;\n}\n\nfunction makeUuid() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nconst requiredTop = ['manager_name', 'week_start_date', 'submitted_at', 'properties'];\nfor (const field of requiredTop) {\n  if (!(field in body)) {\n    throw new Error(`Missing top-level field: ${field}`);\n  }\n}\n\nif (!portfolioMap[body.manager_name]) {\n  throw new Error(`Invalid manager_name: ${body.manager_name}`);\n}\n\nif (!isMonday(body.week_start_date)) {\n  throw new Error('week_start_date must be a Monday');\n}\n\nif (!Array.isArray(body.properties) || body.properties.length === 0) {\n  throw new Error('properties must be a non-empty array');\n}\n\nconst expectedProperties = new Set(portfolioMap[body.manager_name]);\nconst seenProperties = new Set();\n\nconst submittedAt = new Date(body.submitted_at);\nif (Number.isNaN(submittedAt.getTime())) {\n  throw new Error('submitted_at must be a valid ISO timestamp');\n}\n\nconst mondayCutoff = new Date(`${body.week_start_date}T10:00:00-05:00`);\nconst lateSubmission = submittedAt > mondayCutoff ? 1 : 0;\n\nconst rows = body.properties.map((row) => {\n  const requiredNumeric = [\n    'vacant_units',\n    'ready_vacants',\n    'not_ready_vacants',\n    'delinquent_count',\n    'delinquent_amount',\n    'turns_in_progress',\n    'work_orders_over_7_days'\n  ];\n  const requiredText = ['property_name', 'biggest_issue_text', 'help_needed_text'];\n\n  for (const field of requiredNumeric) {\n    if (!(field in row)) throw new Error(`Missing required numeric field: ${field}`);\n    const num = Number(row[field]);\n    if (Number.isNaN(num) || num < 0) throw new Error(`Invalid numeric value for ${field} on ${row.property_name}`);\n  }\n\n  for (const field of requiredText) {\n    if (!(field in row) || !String(row[field]).trim()) {\n      throw new Error(`Missing required text field: ${field} on ${row.property_name ?? 'unknown property'}`);\n    }\n  }\n\n  if (Number(row.vacant_units) !== Number(row.ready_vacants) + Number(row.not_ready_vacants)) {\n    throw new Error(`Vacancy split mismatch on ${row.property_name}`);\n  }\n\n  if (!expectedProperties.has(row.property_name)) {\n    throw new Error(`Property ${row.property_name} is not assigned to ${body.manager_name}`);\n  }\n  if (seenProperties.has(row.property_name)) {\n    throw new Error(`Duplicate property row: ${row.property_name}`);\n  }\n  seenProperties.add(row.property_name);\n\n  return {\n    id: makeUuid(),\n    manager_name: body.manager_name,\n    week_start_date: body.week_start_date,\n    property_name: row.property_name,\n    vacant_units: Number(row.vacant_units),\n    ready_vacants: Number(row.ready_vacants),\n    not_ready_vacants: Number(row.not_ready_vacants),\n    delinquent_count: Number(row.delinquent_count),\n    delinquent_amount: Number(Number(row.delinquent_amount).toFixed(2)),\n    turns_in_progress: Number(row.turns_in_progress),\n    work_orders_over_7_days: Number(row.work_orders_over_7_days),\n    biggest_issue_text: String(row.biggest_issue_text).trim(),\n    help_needed_text: String(row.help_needed_text).trim(),\n    struggling_units_text: row.struggling_units_text ? String(row.struggling_units_text).trim() : null,\n    late_submission: lateSubmission,\n    created_at: new Date().toISOString().slice(0, 19).replace('T', ' ')\n  };\n});\n\nfor (const property of expectedProperties) {\n  if (!seenProperties.has(property)) {\n    throw new Error(`Missing assigned property row: ${property}`);\n  }\n}\n\nreturn rows.map(r => ({ json: r }));\n"
+      },
+      "id": "36dc31fb-8992-4130-9320-c66c9225c684",
+      "name": "Validate and Expand Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "\nINSERT INTO manager_weekly_reports (\n  id,\n  manager_name,\n  week_start_date,\n  property_name,\n  vacant_units,\n  ready_vacants,\n  not_ready_vacants,\n  delinquent_count,\n  delinquent_amount,\n  turns_in_progress,\n  work_orders_over_7_days,\n  biggest_issue_text,\n  help_needed_text,\n  struggling_units_text,\n  late_submission,\n  created_at\n) VALUES (\n  $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16\n);\n",
+        "options": {
+          "queryReplacement": "={{\n[\n  $json.id,\n  $json.manager_name,\n  $json.week_start_date,\n  $json.property_name,\n  $json.vacant_units,\n  $json.ready_vacants,\n  $json.not_ready_vacants,\n  $json.delinquent_count,\n  $json.delinquent_amount,\n  $json.turns_in_progress,\n  $json.work_orders_over_7_days,\n  $json.biggest_issue_text,\n  $json.help_needed_text,\n  $json.struggling_units_text || null,\n  $json.late_submission,\n  $json.created_at\n]\n}}"
+        }
+      },
+      "id": "708d1b45-6573-40c0-a4ea-28fa6c6ff12f",
+      "name": "Insert Weekly Report Rows",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        576,
+        0
+      ],
+      "credentials": {
+        "mySql": {
+          "id": "f3UzvmAj6M8o27XN",
+          "name": "Blaze_Ops Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"status\":\"ok\",\"rows_inserted\": {{$items().length}} }",
+        "options": {}
+      },
+      "id": "f4b4c3d3-8a8b-4089-b28a-a6286eddda84",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        864,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate and Expand Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate and Expand Rows": {
+      "main": [
+        [
+          {
+            "node": "Insert Weekly Report Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Weekly Report Rows": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "160f00a9-de0f-4ce9-895b-faf36cec018e",
+  "activeVersionId": "160f00a9-de0f-4ce9-895b-faf36cec018e",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-04-22T15:34:01.105Z",
+      "createdAt": "2026-04-22T15:34:01.105Z",
+      "role": "workflow:owner",
+      "workflowId": "SDSoESzsSfL87W36",
+      "projectId": "4YBqTudLOBUQfTvU"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-04-22T15:48:17.770Z",
+    "createdAt": "2026-04-22T15:45:22.309Z",
+    "versionId": "160f00a9-de0f-4ce9-895b-faf36cec018e",
+    "workflowId": "SDSoESzsSfL87W36",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "manager-weekly-report-intake",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "31cf6e68-c1ea-4702-a698-fd23dcd46724",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "5540db84-f8fc-41ef-abb0-a2f02339555d"
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst body = $json.body ?? $json;\nconst portfolioMap = {\n  \"Breanna\": [\"Courtyard\", \"Adobe\", \"NorthPark\"],\n  \"Amy\": [\"Jefferson\", \"Riveredge\", \"Crosskeys\"],\n  \"Debbie\": [\"Sagebrush\"],\n  \"Dede\": [\"Westminster\", \"Broadstone\", \"Nelson\"],\n  \"Shelbie/Chris\": [\"Oak Terrace\"],\n  \"Ashlie\": [\"Single Families and Small Multi\"]\n};\n\nfunction isMonday(dateStr) {\n  const d = new Date(`${dateStr}T00:00:00`);\n  return !Number.isNaN(d.getTime()) && d.getDay() === 1;\n}\n\nfunction makeUuid() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nconst requiredTop = ['manager_name', 'week_start_date', 'submitted_at', 'properties'];\nfor (const field of requiredTop) {\n  if (!(field in body)) {\n    throw new Error(`Missing top-level field: ${field}`);\n  }\n}\n\nif (!portfolioMap[body.manager_name]) {\n  throw new Error(`Invalid manager_name: ${body.manager_name}`);\n}\n\nif (!isMonday(body.week_start_date)) {\n  throw new Error('week_start_date must be a Monday');\n}\n\nif (!Array.isArray(body.properties) || body.properties.length === 0) {\n  throw new Error('properties must be a non-empty array');\n}\n\nconst expectedProperties = new Set(portfolioMap[body.manager_name]);\nconst seenProperties = new Set();\n\nconst submittedAt = new Date(body.submitted_at);\nif (Number.isNaN(submittedAt.getTime())) {\n  throw new Error('submitted_at must be a valid ISO timestamp');\n}\n\nconst mondayCutoff = new Date(`${body.week_start_date}T10:00:00-05:00`);\nconst lateSubmission = submittedAt > mondayCutoff ? 1 : 0;\n\nconst rows = body.properties.map((row) => {\n  const requiredNumeric = [\n    'vacant_units',\n    'ready_vacants',\n    'not_ready_vacants',\n    'delinquent_count',\n    'delinquent_amount',\n    'turns_in_progress',\n    'work_orders_over_7_days'\n  ];\n  const requiredText = ['property_name', 'biggest_issue_text', 'help_needed_text'];\n\n  for (const field of requiredNumeric) {\n    if (!(field in row)) throw new Error(`Missing required numeric field: ${field}`);\n    const num = Number(row[field]);\n    if (Number.isNaN(num) || num < 0) throw new Error(`Invalid numeric value for ${field} on ${row.property_name}`);\n  }\n\n  for (const field of requiredText) {\n    if (!(field in row) || !String(row[field]).trim()) {\n      throw new Error(`Missing required text field: ${field} on ${row.property_name ?? 'unknown property'}`);\n    }\n  }\n\n  if (Number(row.vacant_units) !== Number(row.ready_vacants) + Number(row.not_ready_vacants)) {\n    throw new Error(`Vacancy split mismatch on ${row.property_name}`);\n  }\n\n  if (!expectedProperties.has(row.property_name)) {\n    throw new Error(`Property ${row.property_name} is not assigned to ${body.manager_name}`);\n  }\n  if (seenProperties.has(row.property_name)) {\n    throw new Error(`Duplicate property row: ${row.property_name}`);\n  }\n  seenProperties.add(row.property_name);\n\n  return {\n    id: makeUuid(),\n    manager_name: body.manager_name,\n    week_start_date: body.week_start_date,\n    property_name: row.property_name,\n    vacant_units: Number(row.vacant_units),\n    ready_vacants: Number(row.ready_vacants),\n    not_ready_vacants: Number(row.not_ready_vacants),\n    delinquent_count: Number(row.delinquent_count),\n    delinquent_amount: Number(Number(row.delinquent_amount).toFixed(2)),\n    turns_in_progress: Number(row.turns_in_progress),\n    work_orders_over_7_days: Number(row.work_orders_over_7_days),\n    biggest_issue_text: String(row.biggest_issue_text).trim(),\n    help_needed_text: String(row.help_needed_text).trim(),\n    struggling_units_text: row.struggling_units_text ? String(row.struggling_units_text).trim() : null,\n    late_submission: lateSubmission,\n    created_at: new Date().toISOString().slice(0, 19).replace('T', ' ')\n  };\n});\n\nfor (const property of expectedProperties) {\n  if (!seenProperties.has(property)) {\n    throw new Error(`Missing assigned property row: ${property}`);\n  }\n}\n\nreturn rows.map(r => ({ json: r }));\n"
+        },
+        "id": "36dc31fb-8992-4130-9320-c66c9225c684",
+        "name": "Validate and Expand Rows",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          288,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "\nINSERT INTO manager_weekly_reports (\n  id,\n  manager_name,\n  week_start_date,\n  property_name,\n  vacant_units,\n  ready_vacants,\n  not_ready_vacants,\n  delinquent_count,\n  delinquent_amount,\n  turns_in_progress,\n  work_orders_over_7_days,\n  biggest_issue_text,\n  help_needed_text,\n  struggling_units_text,\n  late_submission,\n  created_at\n) VALUES (\n  $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16\n);\n",
+          "options": {
+            "queryReplacement": "={{\n[\n  $json.id,\n  $json.manager_name,\n  $json.week_start_date,\n  $json.property_name,\n  $json.vacant_units,\n  $json.ready_vacants,\n  $json.not_ready_vacants,\n  $json.delinquent_count,\n  $json.delinquent_amount,\n  $json.turns_in_progress,\n  $json.work_orders_over_7_days,\n  $json.biggest_issue_text,\n  $json.help_needed_text,\n  $json.struggling_units_text || null,\n  $json.late_submission,\n  $json.created_at\n]\n}}"
+          }
+        },
+        "id": "708d1b45-6573-40c0-a4ea-28fa6c6ff12f",
+        "name": "Insert Weekly Report Rows",
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          576,
+          0
+        ],
+        "credentials": {
+          "mySql": {
+            "id": "f3UzvmAj6M8o27XN",
+            "name": "Blaze_Ops Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\"status\":\"ok\",\"rows_inserted\": {{$items().length}} }",
+          "options": {}
+        },
+        "id": "f4b4c3d3-8a8b-4089-b28a-a6286eddda84",
+        "name": "Respond Success",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          864,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Validate and Expand Rows",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validate and Expand Rows": {
+        "main": [
+          [
+            {
+              "node": "Insert Weekly Report Rows",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Insert Weekly Report Rows": {
+        "main": [
+          [
+            {
+              "node": "Respond Success",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Brandon Stewart",
+    "name": "Version 160f00a9",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": [
+    {
+      "updatedAt": "2026-04-23T12:40:11.767Z",
+      "createdAt": "2026-04-23T12:40:11.767Z",
+      "id": "nwYcKrWKYFiGYTIf",
+      "name": "Meeting Workflow"
+    }
+  ]
+}
