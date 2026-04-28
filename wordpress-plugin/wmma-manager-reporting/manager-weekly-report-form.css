@@ -1,0 +1,130 @@
+.blaze-mwrf-app {
+  --bg: #f6f7f9;
+  --card: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #d1d5db;
+  --border-strong: #9ca3af;
+  --accent: #111827;
+  --danger: #b91c1c;
+  --danger-bg: #fef2f2;
+  --success: #166534;
+  --success-bg: #f0fdf4;
+  --warning: #92400e;
+  --warning-bg: #fffbeb;
+  --shadow: 0 8px 24px rgba(17, 24, 39, 0.08);
+  --radius: 18px;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.blaze-mwrf-app * { box-sizing: border-box; }
+.blaze-mwrf-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin-bottom: 18px;
+}
+.blaze-mwrf-hero h1 { margin: 0 0 8px; font-size: clamp(1.5rem, 2.5vw, 2rem); }
+.blaze-mwrf-hero p { margin: 0; color: var(--muted); max-width: 820px; }
+.blaze-mwrf-deadline-box {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+.blaze-mwrf-instructions { margin-top: 18px; }
+.blaze-mwrf-instructions h2 { margin: 0 0 10px; font-size: 1.05rem; }
+.blaze-mwrf-instructions ul { margin: 0; padding-left: 20px; color: var(--muted); }
+.blaze-mwrf-instructions li { margin: 0 0 8px; }
+.blaze-mwrf-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+.blaze-mwrf-span-12 { grid-column: span 12; }
+.blaze-mwrf-span-6 { grid-column: span 6; }
+.blaze-mwrf-span-4 { grid-column: span 4; }
+.blaze-mwrf-span-3 { grid-column: span 3; }
+.blaze-mwrf-app label { display: block; font-size: .92rem; font-weight: 600; margin-bottom: 6px; }
+.blaze-mwrf-app input,
+.blaze-mwrf-app select,
+.blaze-mwrf-app textarea,
+.blaze-mwrf-app button { font: inherit; }
+.blaze-mwrf-app input,
+.blaze-mwrf-app select,
+.blaze-mwrf-app textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #fff;
+  color: var(--text);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.blaze-mwrf-app input:focus,
+.blaze-mwrf-app select:focus,
+.blaze-mwrf-app textarea:focus {
+  outline: none;
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.08);
+}
+.blaze-mwrf-app textarea { min-height: 96px; resize: vertical; }
+.blaze-mwrf-property-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  background: #fcfcfd;
+  margin-top: 16px;
+}
+.blaze-mwrf-property-card h3 { margin: 0 0 14px; font-size: 1.1rem; }
+.blaze-mwrf-hint { margin-top: 6px; color: var(--muted); font-size: .84rem; }
+.blaze-mwrf-error { margin-top: 6px; color: var(--danger); font-size: .84rem; }
+.blaze-mwrf-banner {
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border: 1px solid transparent;
+  display: none;
+}
+.blaze-mwrf-banner.show { display: block; }
+.blaze-mwrf-banner.warning { background: var(--warning-bg); color: var(--warning); border-color: #fcd34d; }
+.blaze-mwrf-banner.error { background: var(--danger-bg); color: var(--danger); border-color: #fca5a5; }
+.blaze-mwrf-banner.success { background: var(--success-bg); color: var(--success); border-color: #86efac; }
+.blaze-mwrf-pill-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.blaze-mwrf-pill {
+  font-size: .82rem;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 7px 11px;
+  background: #fff;
+}
+.blaze-mwrf-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; align-items: center; }
+.blaze-mwrf-app button { border: none; border-radius: 14px; padding: 13px 18px; font-weight: 700; cursor: pointer; }
+.blaze-mwrf-primary { background: var(--accent); color: #fff; }
+.blaze-mwrf-secondary { background: #fff; color: var(--text); border: 1px solid var(--border) !important; }
+.blaze-mwrf-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #0f172a;
+  color: #e5e7eb;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: .87rem;
+  max-height: 360px;
+  overflow: auto;
+}
+.blaze-mwrf-footer-note { margin-top: 18px; color: var(--muted); font-size: .88rem; }
+.blaze-mwrf-field-invalid {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.08) !important;
+}
+.blaze-mwrf-hidden { display: none; }
+
+@media (max-width: 900px) {
+  .blaze-mwrf-span-6,
+  .blaze-mwrf-span-4,
+  .blaze-mwrf-span-3 { grid-column: span 12; }
+  .blaze-mwrf-card { padding: 18px; }
+}
