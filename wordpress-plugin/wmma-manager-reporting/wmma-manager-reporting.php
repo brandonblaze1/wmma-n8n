@@ -3,7 +3,7 @@
  * Plugin Name: Blaze Manager Weekly Report Form
  * Description: Staff-only shortcode form for submitting the Manager Weekly Report to n8n.
  * Version: 1.1.0
- * Author: OpenAI
+ * Author: Blaze Real Estate
  */
 
 if (!defined('ABSPATH')) {
