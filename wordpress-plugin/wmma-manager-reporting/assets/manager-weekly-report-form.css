@@ -1,0 +1,16 @@
+.blaze-mwrf-app { font-family: Arial, sans-serif; max-width: 1100px; margin: 0 auto; }
+.blaze-mwrf-card { background: #fff; border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 6px; }
+.blaze-mwrf-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 10px; }
+.blaze-mwrf-span-3 { grid-column: span 3; }
+.blaze-mwrf-span-4 { grid-column: span 4; }
+.blaze-mwrf-span-6 { grid-column: span 6; }
+.blaze-mwrf-property-card { border: 1px solid #ccc; padding: 12px; margin-bottom: 12px; border-radius: 6px; }
+.blaze-mwrf-error { color: #b00020; font-size: 12px; }
+.blaze-mwrf-invalid { border-color: #b00020; }
+.blaze-mwrf-banner { padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+.blaze-mwrf-banner-success { background: #e6f4ea; }
+.blaze-mwrf-banner-error { background: #fdecea; }
+.blaze-mwrf-banner-warning { background: #fff4e5; }
+.blaze-mwrf-hidden { display: none; }
+.blaze-mwrf-mono { font-family: monospace; white-space: pre-wrap; background: #f8f8f8; padding: 10px; }
+.blaze-mwrf-actions button { margin-right: 10px; }
