@@ -1,0 +1,601 @@
+{
+  "updatedAt": "2026-04-27T21:10:25.320Z",
+  "createdAt": "2026-04-22T17:02:21.504Z",
+  "id": "hqovXTw8meebPsjT",
+  "name": "WMMA Meeting Processing",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "11ef7385-c4a1-40e7-9eff-2b481f06bf38",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        320,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "if (!$json.id || !String($json.id).trim()) {\n  throw new Error('Missing meeting id');\n}\n\nif (!$json.manager_name || !String($json.manager_name).trim()) {\n  throw new Error('Missing manager_name');\n}\n\nif (!$json.meeting_datetime || !String($json.meeting_datetime).trim()) {\n  throw new Error('Missing meeting_datetime');\n}\n\nif (!$json.week_reference || !String($json.week_reference).trim()) {\n  throw new Error('Missing week_reference');\n}\n\nif (\n  !$json.summary_structured ||\n  !Array.isArray($json.summary_structured.changes) ||\n  !Array.isArray($json.summary_structured.issues) ||\n  !Array.isArray($json.summary_structured.decisions)\n) {\n  throw new Error('Invalid summary_structured shape');\n}\n\nif (!Array.isArray($json.actions)) {\n  throw new Error('Invalid actions array');\n}\n\nif ($json.actions.length < 1 || $json.actions.length > 5) {\n  throw new Error(`Expected 1-5 actions, got ${$json.actions.length}`);\n}\n\nreturn [{ json: $json }];"
+      },
+      "id": "392f788c-7c94-44ff-bf84-923c499195a4",
+      "name": "Validate Meeting Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO manager_meetings (\n  id,\n  drive_file_id,\n  manager_name,\n  meeting_datetime,\n  week_reference,\n  transcript_raw,\n  summary_structured,\n  created_at\n) VALUES (\n  $1,$2,$3,$4,$5,$6,$7,$8\n);",
+        "options": {
+          "queryReplacement": "={{\n[\n  $json.id,\n  $json.drive_file_id,\n  $json.manager_name,\n  $json.meeting_datetime,\n  $json.week_reference,\n  $json.transcript_raw || null,\n  $json.summary_structured ? JSON.stringify($json.summary_structured) : null,\n  $json.created_at\n]\n}}"
+        }
+      },
+      "id": "501e70b2-e2dd-4efd-9003-dcca5ca358af",
+      "name": "Insert Meeting",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        1248,
+        144
+      ],
+      "credentials": {
+        "mySql": {
+          "id": "f3UzvmAj6M8o27XN",
+          "name": "Blaze_Ops Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function makeUuid() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nconst meeting = $('Validate Meeting Payload').item.json;\nconst now = new Date().toISOString().slice(0, 19).replace('T', ' ');\nconst actions = meeting.actions || [];\n\nreturn actions.map(action => ({\n  json: {\n    id: makeUuid(),\n    meeting_id: meeting.id,\n    manager_name: meeting.manager_name,\n    property_name: action.property_name || null,\n    action_description: action.description,\n    action_owner: action.owner,\n    due_date: action.due_date,\n    status: 'open',\n    created_at: now,\n    completed_at: null\n  }\n}));"
+      },
+      "id": "53b6deb9-0cfc-4441-9415-944c0ac7542a",
+      "name": "Expand Actions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const item = $json;\n\nconst allowedOwners = [\n  item.manager_name,\n  'Brandon'\n];\n\nif (!allowedOwners.includes(item.action_owner)) {\n  throw new Error(`Invalid action_owner: ${item.action_owner}`);\n}\n\nif (!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(item.due_date))) {\n  throw new Error(`Invalid due_date format: ${item.due_date}`);\n}\n\nif (!item.action_description || !String(item.action_description).trim()) {\n  throw new Error('Missing action_description');\n}\n\nif (!item.meeting_id || !String(item.meeting_id).trim()) {\n  throw new Error('Missing meeting_id');\n}\n\nif (!item.manager_name || !String(item.manager_name).trim()) {\n  throw new Error('Missing manager_name');\n}\n\nif (!item.status || !['open', 'completed', 'overdue'].includes(item.status)) {\n  throw new Error(`Invalid status: ${item.status}`);\n}\n\nreturn {\n  json: item\n};"
+      },
+      "id": "1a3a3b1c-1037-4a95-80c1-6246aeb4ec6d",
+      "name": "Validate Action Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO manager_meeting_actions (\n  id,\n  meeting_id,\n  manager_name,\n  property_name,\n  action_description,\n  action_owner,\n  due_date,\n  status,\n  created_at,\n  completed_at\n) VALUES (\n  $1,$2,$3,$4,$5,$6,$7,$8,$9,$10\n);",
+        "options": {
+          "queryReplacement": "={{\n[\n  $json.id,\n  $json.meeting_id,\n  $json.manager_name,\n  $json.property_name || null,\n  $json.action_description,\n  $json.action_owner,\n  $json.due_date,\n  $json.status,\n  $json.created_at,\n  $json.completed_at || null\n]\n}}"
+        }
+      },
+      "id": "8ffe1ad2-4c40-4956-b5f5-55388ddd2d47",
+      "name": "Insert Actions",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        2016,
+        144
+      ],
+      "credentials": {
+        "mySql": {
+          "id": "f3UzvmAj6M8o27XN",
+          "name": "Blaze_Ops Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const meeting = $('Validate Meeting Payload').item.json;\nconst actionCount = $input.all().length;\n\nreturn [{\n  json: {\n    success: true,\n    meeting_id: meeting.id,\n    manager_name: meeting.manager_name,\n    meeting_datetime: meeting.meeting_datetime,\n    week_reference: meeting.week_reference,\n    action_count: actionCount\n  }\n}];"
+      },
+      "id": "1853d413-3bf8-4a4a-b3da-290b6a5f119d",
+      "name": "Build Success Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2272,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id\nFROM manager_meetings\nWHERE drive_file_id = $1\nLIMIT 1;",
+        "options": {
+          "queryReplacement": "={{\n[\n  $json.drive_file_id\n]\n}}"
+        }
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        784,
+        144
+      ],
+      "id": "bc7920c4-e40d-4c3d-b50d-052d5181753c",
+      "name": "Check Existing Drive File",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "f3UzvmAj6M8o27XN",
+          "name": "Blaze_Ops Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\n\nif (rows.length > 0 && rows[0].json && rows[0].json.id) {\n  return [];\n}\n\nreturn [{\n  json: $('Validate Meeting Payload').item.json\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        144
+      ],
+      "id": "19738851-9b54-4bde-a6bd-6f36071a7675",
+      "name": "If Duplicate"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "4P1nQHSRPUnnwbpy",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/4P1nQHSRPUnnwbpy"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2480,
+        144
+      ],
+      "id": "0b438aab-0459-4e29-9574-9f55003a995b",
+      "name": "Call 'WMMA Post-Meeting Follow-Up'"
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate Meeting Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Meeting Payload": {
+      "main": [
+        [
+          {
+            "node": "Check Existing Drive File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Meeting": {
+      "main": [
+        [
+          {
+            "node": "Expand Actions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expand Actions": {
+      "main": [
+        [
+          {
+            "node": "Validate Action Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Action Rows": {
+      "main": [
+        [
+          {
+            "node": "Insert Actions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Actions": {
+      "main": [
+        [
+          {
+            "node": "Build Success Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Existing Drive File": {
+      "main": [
+        [
+          {
+            "node": "If Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Duplicate": {
+      "main": [
+        [
+          {
+            "node": "Insert Meeting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Success Summary": {
+      "main": [
+        [
+          {
+            "node": "Call 'WMMA Post-Meeting Follow-Up'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "55d1ff1f-6d71-4720-820e-1149cdbf298a",
+  "activeVersionId": "55d1ff1f-6d71-4720-820e-1149cdbf298a",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-04-22T17:02:21.504Z",
+      "createdAt": "2026-04-22T17:02:21.504Z",
+      "role": "workflow:owner",
+      "workflowId": "hqovXTw8meebPsjT",
+      "projectId": "4YBqTudLOBUQfTvU"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-04-27T21:12:17.250Z",
+    "createdAt": "2026-04-27T21:10:25.323Z",
+    "versionId": "55d1ff1f-6d71-4720-820e-1149cdbf298a",
+    "workflowId": "hqovXTw8meebPsjT",
+    "nodes": [
+      {
+        "parameters": {},
+        "id": "11ef7385-c4a1-40e7-9eff-2b481f06bf38",
+        "name": "Execute Workflow Trigger",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1,
+        "position": [
+          320,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "if (!$json.id || !String($json.id).trim()) {\n  throw new Error('Missing meeting id');\n}\n\nif (!$json.manager_name || !String($json.manager_name).trim()) {\n  throw new Error('Missing manager_name');\n}\n\nif (!$json.meeting_datetime || !String($json.meeting_datetime).trim()) {\n  throw new Error('Missing meeting_datetime');\n}\n\nif (!$json.week_reference || !String($json.week_reference).trim()) {\n  throw new Error('Missing week_reference');\n}\n\nif (\n  !$json.summary_structured ||\n  !Array.isArray($json.summary_structured.changes) ||\n  !Array.isArray($json.summary_structured.issues) ||\n  !Array.isArray($json.summary_structured.decisions)\n) {\n  throw new Error('Invalid summary_structured shape');\n}\n\nif (!Array.isArray($json.actions)) {\n  throw new Error('Invalid actions array');\n}\n\nif ($json.actions.length < 1 || $json.actions.length > 5) {\n  throw new Error(`Expected 1-5 actions, got ${$json.actions.length}`);\n}\n\nreturn [{ json: $json }];"
+        },
+        "id": "392f788c-7c94-44ff-bf84-923c499195a4",
+        "name": "Validate Meeting Payload",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          528,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO manager_meetings (\n  id,\n  drive_file_id,\n  manager_name,\n  meeting_datetime,\n  week_reference,\n  transcript_raw,\n  summary_structured,\n  created_at\n) VALUES (\n  $1,$2,$3,$4,$5,$6,$7,$8\n);",
+          "options": {
+            "queryReplacement": "={{\n[\n  $json.id,\n  $json.drive_file_id,\n  $json.manager_name,\n  $json.meeting_datetime,\n  $json.week_reference,\n  $json.transcript_raw || null,\n  $json.summary_structured ? JSON.stringify($json.summary_structured) : null,\n  $json.created_at\n]\n}}"
+          }
+        },
+        "id": "501e70b2-e2dd-4efd-9003-dcca5ca358af",
+        "name": "Insert Meeting",
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          1248,
+          144
+        ],
+        "credentials": {
+          "mySql": {
+            "id": "f3UzvmAj6M8o27XN",
+            "name": "Blaze_Ops Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "function makeUuid() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nconst meeting = $('Validate Meeting Payload').item.json;\nconst now = new Date().toISOString().slice(0, 19).replace('T', ' ');\nconst actions = meeting.actions || [];\n\nreturn actions.map(action => ({\n  json: {\n    id: makeUuid(),\n    meeting_id: meeting.id,\n    manager_name: meeting.manager_name,\n    property_name: action.property_name || null,\n    action_description: action.description,\n    action_owner: action.owner,\n    due_date: action.due_date,\n    status: 'open',\n    created_at: now,\n    completed_at: null\n  }\n}));"
+        },
+        "id": "53b6deb9-0cfc-4441-9415-944c0ac7542a",
+        "name": "Expand Actions",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1504,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForEachItem",
+          "jsCode": "const item = $json;\n\nconst allowedOwners = [\n  item.manager_name,\n  'Brandon'\n];\n\nif (!allowedOwners.includes(item.action_owner)) {\n  throw new Error(`Invalid action_owner: ${item.action_owner}`);\n}\n\nif (!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(item.due_date))) {\n  throw new Error(`Invalid due_date format: ${item.due_date}`);\n}\n\nif (!item.action_description || !String(item.action_description).trim()) {\n  throw new Error('Missing action_description');\n}\n\nif (!item.meeting_id || !String(item.meeting_id).trim()) {\n  throw new Error('Missing meeting_id');\n}\n\nif (!item.manager_name || !String(item.manager_name).trim()) {\n  throw new Error('Missing manager_name');\n}\n\nif (!item.status || !['open', 'completed', 'overdue'].includes(item.status)) {\n  throw new Error(`Invalid status: ${item.status}`);\n}\n\nreturn {\n  json: item\n};"
+        },
+        "id": "1a3a3b1c-1037-4a95-80c1-6246aeb4ec6d",
+        "name": "Validate Action Rows",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1760,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO manager_meeting_actions (\n  id,\n  meeting_id,\n  manager_name,\n  property_name,\n  action_description,\n  action_owner,\n  due_date,\n  status,\n  created_at,\n  completed_at\n) VALUES (\n  $1,$2,$3,$4,$5,$6,$7,$8,$9,$10\n);",
+          "options": {
+            "queryReplacement": "={{\n[\n  $json.id,\n  $json.meeting_id,\n  $json.manager_name,\n  $json.property_name || null,\n  $json.action_description,\n  $json.action_owner,\n  $json.due_date,\n  $json.status,\n  $json.created_at,\n  $json.completed_at || null\n]\n}}"
+          }
+        },
+        "id": "8ffe1ad2-4c40-4956-b5f5-55388ddd2d47",
+        "name": "Insert Actions",
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          2016,
+          144
+        ],
+        "credentials": {
+          "mySql": {
+            "id": "f3UzvmAj6M8o27XN",
+            "name": "Blaze_Ops Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const meeting = $('Validate Meeting Payload').item.json;\nconst actionCount = $input.all().length;\n\nreturn [{\n  json: {\n    success: true,\n    meeting_id: meeting.id,\n    manager_name: meeting.manager_name,\n    meeting_datetime: meeting.meeting_datetime,\n    week_reference: meeting.week_reference,\n    action_count: actionCount\n  }\n}];"
+        },
+        "id": "1853d413-3bf8-4a4a-b3da-290b6a5f119d",
+        "name": "Build Success Summary",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2272,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT id\nFROM manager_meetings\nWHERE drive_file_id = $1\nLIMIT 1;",
+          "options": {
+            "queryReplacement": "={{\n[\n  $json.drive_file_id\n]\n}}"
+          }
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          784,
+          144
+        ],
+        "id": "bc7920c4-e40d-4c3d-b50d-052d5181753c",
+        "name": "Check Existing Drive File",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "f3UzvmAj6M8o27XN",
+            "name": "Blaze_Ops Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const rows = $input.all();\n\nif (rows.length > 0 && rows[0].json && rows[0].json.id) {\n  return [];\n}\n\nreturn [{\n  json: $('Validate Meeting Payload').item.json\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          992,
+          144
+        ],
+        "id": "19738851-9b54-4bde-a6bd-6f36071a7675",
+        "name": "If Duplicate"
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "4P1nQHSRPUnnwbpy",
+            "mode": "id",
+            "cachedResultUrl": "/workflow/4P1nQHSRPUnnwbpy"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          2480,
+          144
+        ],
+        "id": "0b438aab-0459-4e29-9574-9f55003a995b",
+        "name": "Call 'WMMA Post-Meeting Follow-Up'"
+      }
+    ],
+    "connections": {
+      "Execute Workflow Trigger": {
+        "main": [
+          [
+            {
+              "node": "Validate Meeting Payload",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validate Meeting Payload": {
+        "main": [
+          [
+            {
+              "node": "Check Existing Drive File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Insert Meeting": {
+        "main": [
+          [
+            {
+              "node": "Expand Actions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Expand Actions": {
+        "main": [
+          [
+            {
+              "node": "Validate Action Rows",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validate Action Rows": {
+        "main": [
+          [
+            {
+              "node": "Insert Actions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Insert Actions": {
+        "main": [
+          [
+            {
+              "node": "Build Success Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Existing Drive File": {
+        "main": [
+          [
+            {
+              "node": "If Duplicate",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Duplicate": {
+        "main": [
+          [
+            {
+              "node": "Insert Meeting",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Success Summary": {
+        "main": [
+          [
+            {
+              "node": "Call 'WMMA Post-Meeting Follow-Up'",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Brandon Stewart",
+    "name": "Version 55d1ff1f",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": [
+    {
+      "updatedAt": "2026-04-23T12:40:11.767Z",
+      "createdAt": "2026-04-23T12:40:11.767Z",
+      "id": "nwYcKrWKYFiGYTIf",
+      "name": "Meeting Workflow"
+    }
+  ]
+}
