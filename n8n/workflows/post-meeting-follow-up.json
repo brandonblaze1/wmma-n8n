@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-29T03:15:27.023Z",
+  "updatedAt": "2026-04-29T15:51:20.007Z",
   "createdAt": "2026-04-23T12:41:36.076Z",
   "id": "4P1nQHSRPUnnwbpy",
   "name": "WMMA Post-Meeting Follow-Up",
@@ -104,86 +104,21 @@
   },
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "3WJZrZsLJqgg1EIM",
+    "saveDataSuccessExecution": "none",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "timeSavedPerExecution": 5
   },
   "staticData": null,
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "pinData": {
-    "Execute Workflow Trigger": [
-      {
-        "json": {
-          "success": true,
-          "meeting_id": "fdb8d242-6b0f-4074-9653-874202088e00",
-          "manager_name": "Breanna",
-          "meeting_datetime": "2026-04-28 09:28:00",
-          "week_reference": "2026-04-27",
-          "summary_structured": {
-            "changes": [
-              "Management reviewed delinquency statuses and marketing strategies with a new focus on Facebook and automation tools.\n\nProperty delinquency and accounting\nAdobe and North Park delinquency figures were reviewed and adjusted following payment resolutions. Accounting staff must correct duplicate charges to accurately reflect the remaining balance.\n\nMarketing and Facebook integration\nNew procedures for posting vacant units to Facebook were introduced to improve lead generation. Automated listings through AppFolio and the company website remain primary sources for new interest.\n\nSecurity and unit walkthroughs\nAdministrative system restrictions were implemented to prevent errors while testing AI for listing content generation. Staff will complete vacant unit walkthroughs to finalize necessary repairs."
-            ],
-            "issues": [
-              "Review of Adobe Property Delinquency and Unit Issues: The Adobe property has seven vacant and seven not-ready units, with a reported delinquency amount of $5,300, which includes the total amount receivable, not just rent (00:01:21). The reported delinquency includes two units under eviction, totaling $2,000, and a specific issue with Bronco Maravic's account, which has an $860 charge (00:03:12). The account issue with Bronco Maravic arose because they were incorrectly charged in two places (unit 13 and unit 9), which means the actual delinquency is much lower, and the accounting needs to be corrected by Tammy (00:04:29).\nHandling of Accounting Errors and Payments at Adobe: A transfer attempt for the tenant was stopped because it affected the deposit and risked worsening the accounting issue, confirming that Tammy needs to handle the complex accounting correction. A $300 payment is scheduled to be picked up today, and once the $860 charge is corrected, the remaining non-eviction delinquency will drop to $620 (00:04:29). Brandon Stewart recommended that they should not be concerned about the error, as they are not the only one who has done it (00:05:39).\nAdobe Guest Card Follow-up and Communication Tracking: Adobe has one guest card for Rachel Cripple regarding unit 37 Adobe Trail, which was missed until a recent review. It was noted that this guest card came in on the 23rd, and they will need to reach out to Rachel Cripple and be \"pushy\" in their follow-up, using the record communication feature to track calls and emails. They confirmed that they had previously reached out via text after a call, but the prospect had not yet responded (00:06:44) (00:14:02).\n\nUpdates on Marketing and Vacant Unit Photos: They have been working on the marketing side, learning how to post and unpost vacant units, and are currently focused on loading photos and removing old, discounted specials. Brandon Stewart shared a resource for floor plans and marketing materials available in the shared Google Drive under `intranet managers and staff > property info > multi and single family > North Park Town Count Homes > marketing and signage` (00:09:06). The need for photos was emphasized, as units without photos generally receive less interest from prospective tenants (00:12:49).\n\nNorth Park Delinquency and Payment Status: At the North Park property, two top delinquency accounts are being resolved through third-party payments: one for the Borders unit, where the church is mailing Friday's rent and next month's rent, and the Buford unit, which is being covered by United Way (00:15:02). This significantly reduces the North Park delinquency down to an estimated $440 or $500. They also committed to becoming stricter about pursuing small balances going forward (00:16:08).\n\nCourtyard Delinquency and Resolution Status: For the Courtyard property, Christopher Jackson's rent has not been paid, and they have filed for a writ of possession, which resolves $2,600 of the property's delinquency (00:16:08). Furthermore, pet fees for several tenants ($125 and $70) and Eli Green's balance ($338) are expected to be covered by PCS and Vicki in the next month's payment, as these are all tenants associated with PCS (00:17:40).\nInstructions on Social Media Marketing using Facebook: Brandon Stewart provided a detailed demonstration of how to post available units in Facebook groups, such as \"Rent houses in Borger not for sale rent only,\" which is identified as the biggest source of guest cards (00:19:18) (00:22:24). They recommended including photos, the price ($872), the address (e.g., 37 Adobe Trail), and contact information in the posts (00:20:30). They noted that posting to Facebook, which they have not done previously, is guaranteed to generate leads and leases (00:22:24).\n\nConnecting Facebook Posts to the Company Website and AppFolio: Brandon Stewart demonstrated how to use the \"at tag\" (@North Park Town Homes) in Facebook posts to create a link that directs users to the North Park Facebook page and subsequently to the company's website page for available listings (00:26:24). Units posted to the website in AppFolio are automatically listed on the company website and external listing sites like Apartments.com and Rent.com (00:29:01). Reviewing the source of guest cards confirms that internet sources, such as Rent.com and the website, account for about 80% of inbound leads (00:31:27).\n\nNew Security and AI Tool Implementation: Brandon Stewart confirmed that the ability to change unit names has been removed to prevent accidental errors, while they can still update photos and marketing content (00:33:04). Brandon Stewart also introduced the test Gemini tool, which can generate updated listing content using parameters like current specials, advising them to double-check the content since AI can sometimes be inaccurate (00:34:00).\nFinal Assignments and Vacant Unit Walkthrough: They are waiting for Trey to assist with turning units, which is necessary to finalize two tenant signings. Brandon Stewart asked them to complete the vacant unit walkthrough that was interrupted when Tammy hurt themself, making notes of what needs to be done in every vacant unit so they can be addressed (00:35:57). They confirmed they will complete the walk-through and marketing updates this afternoon (00:37:10)."
-            ],
-            "decisions": [
-              "Delinquency reporting standard defined Delinquency reporting is standardized to include the total amount receivable rather than only delinquent rent.\nUnit renaming restricted in AppFolio System permissions in AppFolio are restricted to prevent the renaming of units, while maintaining all other user functionality."
-            ]
-          },
-          "actions": [
-            {
-              "action_description": "Pick Up Payment: Collect payment at the Adobe property this afternoon.",
-              "action_owner": "Breanna",
-              "due_date": "2026-05-05",
-              "property_name": "Adobe"
-            },
-            {
-              "action_description": "Fix Accounting: Resolve the accounting error regarding the tenant transfer between unit 13 and unit 9.",
-              "action_owner": "Tammie",
-              "due_date": "2026-05-05",
-              "property_name": null
-            },
-            {
-              "action_description": "Coordinate Transfer: Get with Tammy to straighten out the tenant accounting error for unit 9 and 13.",
-              "action_owner": "Breanna",
-              "due_date": "2026-05-05",
-              "property_name": null
-            },
-            {
-              "action_description": "Contact Guest Card: Call Rachel Cripple again to follow up on her unit 37 inquiry; be pushy.",
-              "action_owner": "Breanna",
-              "due_date": "2026-05-05",
-              "property_name": null
-            },
-            {
-              "action_description": "Post Marketing Content: Load and post updated photos and marketing content for all vacant units.",
-              "action_owner": "Breanna",
-              "due_date": "2026-05-05",
-              "property_name": null
-            },
-            {
-              "action_description": "Learn Facebook Marketing: Adopt Facebook usage to learn how to effectively market properties.",
-              "action_owner": "Breanna",
-              "due_date": "2026-05-05",
-              "property_name": null
-            },
-            {
-              "action_description": "Complete Unit Walkthrough: Visit all remaining vacant units, make necessary notes, and send notes to Brandon Stewart.",
-              "action_owner": "Breanna",
-              "due_date": "2026-05-05",
-              "property_name": null
-            }
-          ],
-          "action_count": 7
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ]
-  },
+  "pinData": {},
   "versionId": "b89eff71-54d7-48ce-a2ef-cb9374fa9b92",
-  "activeVersionId": "01d63810-aec3-4bbd-897a-af2a0b03e651",
+  "activeVersionId": "b89eff71-54d7-48ce-a2ef-cb9374fa9b92",
   "triggerCount": 0,
   "shared": [
     {
@@ -195,9 +130,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-04-29T03:05:38.196Z",
-    "createdAt": "2026-04-29T03:05:30.331Z",
-    "versionId": "01d63810-aec3-4bbd-897a-af2a0b03e651",
+    "updatedAt": "2026-04-29T15:50:26.410Z",
+    "createdAt": "2026-04-29T03:15:27.029Z",
+    "versionId": "b89eff71-54d7-48ce-a2ef-cb9374fa9b92",
     "workflowId": "4P1nQHSRPUnnwbpy",
     "nodes": [
       {
@@ -226,7 +161,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const m = $json;\n\nfunction escapeHtml(value) {\n  return String(value ?? '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;')\n    .replace(/'/g, '&#039;');\n}\n\nfunction formatParagraphBlocks(arr) {\n  if (!Array.isArray(arr) || arr.length === 0) {\n    return '<p style=\"margin:0;color:#666;\">None</p>';\n  }\n\n  return arr.map(text => `\n    <div style=\"margin-bottom:10px;padding:12px;background:#f8fafc;border-left:4px solid #1f2937;border-radius:6px;\">\n      ${escapeHtml(text).replace(/\\n/g, '<br>')}\n    </div>\n  `).join('');\n}\n\nfunction formatActions(actions) {\n  if (!Array.isArray(actions) || actions.length === 0) {\n    return '<p style=\"margin:0;color:#666;\">No action items found.</p>';\n  }\n\n  return actions.map((a, index) => `\n    <tr>\n      <td style=\"padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top;width:36px;color:#6b7280;\">\n        ${index + 1}\n      </td>\n      <td style=\"padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top;\">\n        <strong>${escapeHtml(a.action_description)}</strong>\n        ${a.property_name ? `<div style=\"margin-top:4px;color:#6b7280;\">Property: ${escapeHtml(a.property_name)}</div>` : ''}\n      </td>\n      <td style=\"padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top;white-space:nowrap;\">\n        ${escapeHtml(a.action_owner)}\n      </td>\n      <td style=\"padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top;white-space:nowrap;\">\n        ${escapeHtml(a.due_date)}\n      </td>\n    </tr>\n  `).join('');\n}\n\nconst dt = new Date(String(m.meeting_datetime).replace(' ', 'T'));\nconst meetingDate = dt.toLocaleDateString('en-US', {\n  weekday: 'short',\n  month: 'short',\n  day: 'numeric',\n  year: 'numeric'\n});\n\nconst subject = `Meeting Follow-Up – ${m.manager_name} – ${meetingDate}`;\n\nconst body = `\n<div style=\"font-family:Arial,sans-serif;background:#f3f4f6;padding:24px;color:#111827;\">\n  <div style=\"max-width:760px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;\">\n\n    <div style=\"background:#111827;color:#ffffff;padding:22px 26px;\">\n      <div style=\"font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:#d1d5db;\">\n        WMMA Meeting Follow-Up\n      </div>\n      <div style=\"font-size:24px;font-weight:700;margin-top:6px;\">\n        ${escapeHtml(m.manager_name)}\n      </div>\n      <div style=\"font-size:14px;color:#d1d5db;margin-top:6px;\">\n        ${escapeHtml(meetingDate)} · Week of ${escapeHtml(m.week_reference)} · ${escapeHtml(m.action_count)} action item${m.action_count === 1 ? '' : 's'}\n      </div>\n    </div>\n\n    <div style=\"padding:24px 26px;\">\n\n      <div style=\"margin-bottom:24px;\">\n        <h2 style=\"font-size:18px;margin:0 0 10px;border-bottom:2px solid #e5e7eb;padding-bottom:8px;\">\n          Summary\n        </h2>\n        ${formatParagraphBlocks(m.summary_structured?.changes)}\n      </div>\n\n      <div style=\"margin-bottom:24px;\">\n        <h2 style=\"font-size:18px;margin:0 0 10px;border-bottom:2px solid #e5e7eb;padding-bottom:8px;\">\n          Key Issues\n        </h2>\n        ${formatParagraphBlocks(m.summary_structured?.issues)}\n      </div>\n\n      <div style=\"margin-bottom:24px;\">\n        <h2 style=\"font-size:18px;margin:0 0 10px;border-bottom:2px solid #e5e7eb;padding-bottom:8px;\">\n          Decisions\n        </h2>\n        ${formatParagraphBlocks(m.summary_structured?.decisions)}\n      </div>\n\n      <div style=\"margin-bottom:24px;\">\n        <h2 style=\"font-size:18px;margin:0 0 10px;border-bottom:2px solid #e5e7eb;padding-bottom:8px;\">\n          Action Items\n        </h2>\n\n        <table style=\"width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;\">\n          <thead>\n            <tr style=\"background:#f9fafb;\">\n              <th style=\"text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;width:36px;\">#</th>\n              <th style=\"text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;\">Action</th>\n              <th style=\"text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;\">Owner</th>\n              <th style=\"text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;\">Due</th>\n            </tr>\n          </thead>\n          <tbody>\n            ${formatActions(m.actions)}\n          </tbody>\n        </table>\n      </div>\n\n      <div style=\"margin-top:24px;padding:14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;\">\n        Please review your assigned items and begin execution immediately.\n      </div>\n\n      <p style=\"margin-top:22px;\">- Brandon</p>\n    </div>\n  </div>\n</div>\n`;\n\nreturn [{ json: { ...m, subject, body } }];"
+          "jsCode": "const m = $json;\n\nfunction escapeHtml(value) {\n  return String(value ?? '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;')\n    .replace(/'/g, '&#039;');\n}\n\nfunction shorten(text, max = 260) {\n  const t = String(text || '').replace(/\\s+/g, ' ').trim();\n  if (t.length <= max) return t;\n  return t.substring(0, max).trim() + '...';\n}\n\nfunction splitUsefulLines(text) {\n  return String(text || '')\n    .split(/\\n+/)\n    .map(s => s.trim())\n    .filter(Boolean)\n    .filter(s => !/^rate this summary/i.test(s))\n    .filter(s => !/^helpful or not helpful/i.test(s));\n}\n\nfunction formatShortList(arr, maxItems = 3, maxChars = 280) {\n  if (!Array.isArray(arr) || arr.length === 0) {\n    return '<p style=\"color:#666;margin:0;\">None</p>';\n  }\n\n  const lines = arr\n    .flatMap(splitUsefulLines)\n    .filter(Boolean)\n    .slice(0, maxItems);\n\n  if (!lines.length) {\n    return '<p style=\"color:#666;margin:0;\">None</p>';\n  }\n\n  return lines.map(i => `\n    <div style=\"margin-bottom:8px;padding:10px 12px;background:#f9fafb;border-left:4px solid #374151;border-radius:6px;\">\n      ${escapeHtml(shorten(i, maxChars))}\n    </div>\n  `).join('');\n}\n\nfunction formatDecisions(arr) {\n  if (!Array.isArray(arr) || arr.length === 0) {\n    return '<p style=\"color:#666;margin:0;\">None</p>';\n  }\n\n  const lines = arr.flatMap(splitUsefulLines).filter(Boolean);\n\n  return lines.map(i => `\n    <div style=\"margin-bottom:8px;padding:10px 12px;background:#eef6ff;border-left:4px solid #1d4ed8;border-radius:6px;\">\n      ${escapeHtml(shorten(i, 320))}\n    </div>\n  `).join('');\n}\n\nfunction formatActions(actions) {\n  if (!Array.isArray(actions) || actions.length === 0) {\n    return '<p style=\"margin:0;color:#666;\">No action items found.</p>';\n  }\n\n  return actions.map((a, index) => `\n    <tr>\n      <td style=\"padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top;width:34px;color:#6b7280;\">\n        ${index + 1}\n      </td>\n      <td style=\"padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top;\">\n        <strong>${escapeHtml(a.action_description)}</strong>\n        ${a.property_name ? `<div style=\"margin-top:4px;color:#6b7280;font-size:13px;\">Property: ${escapeHtml(a.property_name)}</div>` : ''}\n      </td>\n      <td style=\"padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top;white-space:nowrap;\">\n        ${escapeHtml(a.action_owner)}\n      </td>\n      <td style=\"padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top;white-space:nowrap;\">\n        ${escapeHtml(a.due_date)}\n      </td>\n    </tr>\n  `).join('');\n}\n\nconst dt = new Date(String(m.meeting_datetime).replace(' ', 'T'));\nconst meetingDate = dt.toLocaleDateString('en-US', {\n  weekday: 'short',\n  month: 'short',\n  day: 'numeric',\n  year: 'numeric'\n});\n\nconst actionCount = Array.isArray(m.actions) ? m.actions.length : Number(m.action_count || 0);\n\nconst summaryHtml = formatShortList(m.summary_structured?.changes, 3, 280);\nconst issuesHtml = formatShortList(m.summary_structured?.issues, 3, 300);\nconst decisionsHtml = formatDecisions(m.summary_structured?.decisions);\n\nconst subject = `Meeting Follow-Up – ${m.manager_name} – ${meetingDate}`;\n\nconst body = `\n<div style=\"font-family:Arial,sans-serif;background:#f3f4f6;padding:20px;color:#111827;\">\n  <div style=\"max-width:760px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;\">\n\n    <div style=\"background:#111827;color:#ffffff;padding:20px 24px;\">\n      <div style=\"font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#d1d5db;\">\n        WMMA Meeting Follow-Up\n      </div>\n      <div style=\"font-size:24px;font-weight:700;margin-top:6px;\">\n        ${escapeHtml(m.manager_name)}\n      </div>\n      <div style=\"font-size:14px;color:#d1d5db;margin-top:6px;\">\n        ${escapeHtml(meetingDate)} · Week of ${escapeHtml(m.week_reference)} · ${escapeHtml(actionCount)} action item${actionCount === 1 ? '' : 's'}\n      </div>\n    </div>\n\n    <div style=\"padding:22px 24px;\">\n\n      <div style=\"margin-bottom:22px;\">\n        <h2 style=\"font-size:17px;margin:0 0 10px;border-bottom:2px solid #e5e7eb;padding-bottom:8px;\">\n          Quick Summary\n        </h2>\n        ${summaryHtml}\n      </div>\n\n      <div style=\"margin-bottom:22px;\">\n        <h2 style=\"font-size:17px;margin:0 0 10px;border-bottom:2px solid #e5e7eb;padding-bottom:8px;\">\n          Key Issues\n        </h2>\n        ${issuesHtml}\n      </div>\n\n      <div style=\"margin-bottom:22px;\">\n        <h2 style=\"font-size:17px;margin:0 0 10px;border-bottom:2px solid #e5e7eb;padding-bottom:8px;\">\n          Decisions\n        </h2>\n        ${decisionsHtml}\n      </div>\n\n      <div style=\"margin-bottom:22px;\">\n        <h2 style=\"font-size:17px;margin:0 0 10px;border-bottom:2px solid #e5e7eb;padding-bottom:8px;\">\n          Action Items\n        </h2>\n\n        <table style=\"width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;font-size:14px;\">\n          <thead>\n            <tr style=\"background:#f9fafb;\">\n              <th style=\"text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;width:34px;\">#</th>\n              <th style=\"text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;\">Action</th>\n              <th style=\"text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;\">Owner</th>\n              <th style=\"text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;\">Due</th>\n            </tr>\n          </thead>\n          <tbody>\n            ${formatActions(m.actions)}\n          </tbody>\n        </table>\n      </div>\n\n      <div style=\"margin-top:22px;padding:13px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:14px;\">\n        Please review your assigned items and begin execution immediately.\n      </div>\n\n      <p style=\"margin-top:20px;\">- Brandon</p>\n\n      <p style=\"margin-top:16px;font-size:12px;color:#6b7280;\">\n        Full meeting detail is retained in the meeting record.\n      </p>\n    </div>\n  </div>\n</div>\n`;\n\nreturn [{ json: { ...m, subject, body } }];"
         },
         "id": "77646eae-4191-4690-b729-541835e2e56d",
         "name": "Build Email Content",
@@ -297,7 +232,7 @@
       }
     },
     "authors": "Brandon Stewart",
-    "name": "Version 01d63810",
+    "name": "Version b89eff71",
     "description": "",
     "autosaved": true
   },
