@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-29T15:54:17.653Z",
+  "updatedAt": "2026-05-04T14:16:14.419Z",
   "createdAt": "2026-04-22T15:36:06.303Z",
   "id": "RreStruo29XN87Y9",
   "name": "WMMA Mark Overdue Meeting Actions",
@@ -73,15 +73,17 @@
   },
   "staticData": {
     "node:Schedule Trigger": {
-      "recurrenceRules": []
+      "recurrenceRules": [
+        12
+      ]
     }
   },
   "meta": {
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "443a5b86-6261-4cf1-ad73-5201606e3417",
-  "activeVersionId": "443a5b86-6261-4cf1-ad73-5201606e3417",
+  "versionId": "7a7ca7a9-ba42-46b1-987b-a70c6bf381d9",
+  "activeVersionId": "7a7ca7a9-ba42-46b1-987b-a70c6bf381d9",
   "triggerCount": 1,
   "shared": [
     {
@@ -93,9 +95,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-04-22T17:59:27.056Z",
-    "createdAt": "2026-04-22T15:36:12.608Z",
-    "versionId": "443a5b86-6261-4cf1-ad73-5201606e3417",
+    "updatedAt": "2026-05-04T14:16:23.813Z",
+    "createdAt": "2026-05-04T14:16:14.422Z",
+    "versionId": "7a7ca7a9-ba42-46b1-987b-a70c6bf381d9",
     "workflowId": "RreStruo29XN87Y9",
     "nodes": [
       {
@@ -154,7 +156,7 @@
       }
     },
     "authors": "Brandon Stewart",
-    "name": "Version 443a5b86",
+    "name": "Version 7a7ca7a9",
     "description": "",
     "autosaved": true
   },
