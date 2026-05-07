@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-29T15:53:51.619Z",
+  "updatedAt": "2026-05-05T14:24:16.830Z",
   "createdAt": "2026-04-22T15:34:01.105Z",
   "id": "SDSoESzsSfL87W36",
   "name": "WMMA Manager Weekly Report Intake",
@@ -49,7 +49,7 @@
       "type": "n8n-nodes-base.mySql",
       "typeVersion": 2.5,
       "position": [
-        576,
+        768,
         0
       ],
       "credentials": {
@@ -70,9 +70,45 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        864,
+        1072,
         0
       ]
+    },
+    {
+      "parameters": {
+        "sendTo": "brandon@blazeproperty.com, tammie@blazeproperty.com, ashlie@blazeproperty.com",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        224
+      ],
+      "id": "778b27dc-93bd-42f1-b22a-4512d1d83788",
+      "name": "Send a message",
+      "webhookId": "50bee5bb-e87d-4736-ac83-929755f1e733",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "L5rzlMgd96udEdLH",
+          "name": "Brandon@blazeproperty.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = items.map(item => item.json);\n\nconst money = (value) =>\n  Number(value || 0).toLocaleString(\"en-US\", {\n    style: \"currency\",\n    currency: \"USD\",\n  });\n\nconst text = (value) =>\n  value && String(value).trim() ? String(value).trim() : \"—\";\n\nconst total = rows.reduce(\n  (acc, row) => {\n    acc.vacant_units += Number(row.vacant_units || 0);\n    acc.ready_vacants += Number(row.ready_vacants || 0);\n    acc.not_ready_vacants += Number(row.not_ready_vacants || 0);\n    acc.delinquent_count += Number(row.delinquent_count || 0);\n    acc.delinquent_amount += Number(row.delinquent_amount || 0);\n    acc.turns_in_progress += Number(row.turns_in_progress || 0);\n    acc.work_orders_over_7_days += Number(row.work_orders_over_7_days || 0);\n    return acc;\n  },\n  {\n    vacant_units: 0,\n    ready_vacants: 0,\n    not_ready_vacants: 0,\n    delinquent_count: 0,\n    delinquent_amount: 0,\n    turns_in_progress: 0,\n    work_orders_over_7_days: 0,\n  }\n);\n\nconst managerName = rows[0]?.manager_name || \"Manager\";\nconst weekStartDate = rows[0]?.week_start_date || \"\";\n\nconst propertySections = rows\n  .map((row) => {\n    const lateBadge = Number(row.late_submission) === 1\n      ? `<span style=\"background:#fff3cd;color:#856404;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700;\">Late Submission</span>`\n      : \"\";\n\n    return `\n      <div style=\"border:1px solid #d9e2ec;border-radius:10px;margin:18px 0;padding:18px;background:#ffffff;\">\n        <h2 style=\"margin:0 0 6px;font-size:20px;color:#102a43;\">\n          ${text(row.property_name)} ${lateBadge}\n        </h2>\n\n        <table style=\"width:100%;border-collapse:collapse;margin-top:14px;font-size:14px;\">\n          <tr>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Vacant Units</strong></td>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${row.vacant_units}</td>\n          </tr>\n          <tr>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Ready Vacants</strong></td>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${row.ready_vacants}</td>\n          </tr>\n          <tr>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Not Ready Vacants</strong></td>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${row.not_ready_vacants}</td>\n          </tr>\n          <tr>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Delinquent Count</strong></td>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${row.delinquent_count}</td>\n          </tr>\n          <tr>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Delinquent Amount</strong></td>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${money(row.delinquent_amount)}</td>\n          </tr>\n          <tr>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Turns in Progress</strong></td>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${row.turns_in_progress}</td>\n          </tr>\n          <tr>\n            <td style=\"padding:8px;\"><strong>Work Orders Over 7 Days</strong></td>\n            <td style=\"padding:8px;\">${row.work_orders_over_7_days}</td>\n          </tr>\n        </table>\n\n        <div style=\"margin-top:16px;\">\n          <p><strong>Biggest Issue:</strong><br>${text(row.biggest_issue_text)}</p>\n          <p><strong>Help Needed:</strong><br>${text(row.help_needed_text)}</p>\n          <p><strong>Struggling Units / Leasing Notes:</strong><br>${text(row.struggling_units_text)}</p>\n        </div>\n      </div>\n    `;\n  })\n  .join(\"\");\n\nconst html = `\n<!DOCTYPE html>\n<html>\n<body style=\"margin:0;padding:0;background:#f5f7fa;font-family:Arial,Helvetica,sans-serif;color:#243b53;\">\n  <div style=\"max-width:760px;margin:0 auto;padding:24px;\">\n    <div style=\"background:#102a43;color:#ffffff;padding:22px;border-radius:12px 12px 0 0;\">\n      <h1 style=\"margin:0;font-size:24px;\">Weekly Manager Report</h1>\n      <p style=\"margin:8px 0 0;\">${managerName} — Week of ${weekStartDate}</p>\n    </div>\n\n    <div style=\"background:#ffffff;padding:18px;border-left:1px solid #d9e2ec;border-right:1px solid #d9e2ec;\">\n      <h2 style=\"margin-top:0;color:#102a43;\">Snapshot Summary</h2>\n\n      <table style=\"width:100%;border-collapse:collapse;font-size:14px;\">\n        <tr>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Total Vacants</strong></td>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${total.vacant_units}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Ready / Not Ready</strong></td>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${total.ready_vacants} / ${total.not_ready_vacants}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Total Delinquent Accounts</strong></td>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${total.delinquent_count}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Total Delinquent Amount</strong></td>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${money(total.delinquent_amount)}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Turns in Progress</strong></td>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${total.turns_in_progress}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px;\"><strong>Work Orders Over 7 Days</strong></td>\n          <td style=\"padding:8px;\">${total.work_orders_over_7_days}</td>\n        </tr>\n      </table>\n\n      ${propertySections}\n    </div>\n\n    <div style=\"background:#eef2f7;padding:14px;border-radius:0 0 12px 12px;border:1px solid #d9e2ec;font-size:12px;color:#52606d;\">\n      This email is generated from the weekly manager reporting baseline.\n    </div>\n  </div>\n</body>\n</html>\n`;\n\nreturn [\n  {\n    json: {\n      manager_name: managerName,\n      week_start_date: weekStartDate,\n      subject: `Weekly Manager Report - ${managerName} - ${weekStartDate}`,\n      html,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        0
+      ],
+      "id": "3aeb08c1-2d63-4aea-b111-a91c7fbd0fd0",
+      "name": "Code in JavaScript"
     }
   ],
   "connections": {
@@ -94,6 +130,11 @@
             "node": "Insert Weekly Report Rows",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -103,6 +144,22 @@
         [
           {
             "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
             "type": "main",
             "index": 0
           }
@@ -125,8 +182,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "160f00a9-de0f-4ce9-895b-faf36cec018e",
-  "activeVersionId": "160f00a9-de0f-4ce9-895b-faf36cec018e",
+  "versionId": "0a24c148-eb06-4661-b0c1-997593de4d69",
+  "activeVersionId": "0a24c148-eb06-4661-b0c1-997593de4d69",
   "triggerCount": 1,
   "shared": [
     {
@@ -138,9 +195,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-04-22T15:48:17.770Z",
-    "createdAt": "2026-04-22T15:45:22.309Z",
-    "versionId": "160f00a9-de0f-4ce9-895b-faf36cec018e",
+    "updatedAt": "2026-05-05T14:24:09.486Z",
+    "createdAt": "2026-05-05T14:24:00.639Z",
+    "versionId": "0a24c148-eb06-4661-b0c1-997593de4d69",
     "workflowId": "SDSoESzsSfL87W36",
     "nodes": [
       {
@@ -186,7 +243,7 @@
         "type": "n8n-nodes-base.mySql",
         "typeVersion": 2.5,
         "position": [
-          576,
+          768,
           0
         ],
         "credentials": {
@@ -207,9 +264,45 @@
         "type": "n8n-nodes-base.respondToWebhook",
         "typeVersion": 1.1,
         "position": [
-          864,
+          1072,
           0
         ]
+      },
+      {
+        "parameters": {
+          "sendTo": "brandon@blazeproperty.com, tammie@blazeproperty.com, ashlie@blazeproperty.com",
+          "subject": "={{ $json.subject }}",
+          "message": "={{ $json.html }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          800,
+          224
+        ],
+        "id": "778b27dc-93bd-42f1-b22a-4512d1d83788",
+        "name": "Send a message",
+        "webhookId": "50bee5bb-e87d-4736-ac83-929755f1e733",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "L5rzlMgd96udEdLH",
+            "name": "Brandon@blazeproperty.com"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const rows = items.map(item => item.json);\n\nconst money = (value) =>\n  Number(value || 0).toLocaleString(\"en-US\", {\n    style: \"currency\",\n    currency: \"USD\",\n  });\n\nconst text = (value) =>\n  value && String(value).trim() ? String(value).trim() : \"—\";\n\nconst total = rows.reduce(\n  (acc, row) => {\n    acc.vacant_units += Number(row.vacant_units || 0);\n    acc.ready_vacants += Number(row.ready_vacants || 0);\n    acc.not_ready_vacants += Number(row.not_ready_vacants || 0);\n    acc.delinquent_count += Number(row.delinquent_count || 0);\n    acc.delinquent_amount += Number(row.delinquent_amount || 0);\n    acc.turns_in_progress += Number(row.turns_in_progress || 0);\n    acc.work_orders_over_7_days += Number(row.work_orders_over_7_days || 0);\n    return acc;\n  },\n  {\n    vacant_units: 0,\n    ready_vacants: 0,\n    not_ready_vacants: 0,\n    delinquent_count: 0,\n    delinquent_amount: 0,\n    turns_in_progress: 0,\n    work_orders_over_7_days: 0,\n  }\n);\n\nconst managerName = rows[0]?.manager_name || \"Manager\";\nconst weekStartDate = rows[0]?.week_start_date || \"\";\n\nconst propertySections = rows\n  .map((row) => {\n    const lateBadge = Number(row.late_submission) === 1\n      ? `<span style=\"background:#fff3cd;color:#856404;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700;\">Late Submission</span>`\n      : \"\";\n\n    return `\n      <div style=\"border:1px solid #d9e2ec;border-radius:10px;margin:18px 0;padding:18px;background:#ffffff;\">\n        <h2 style=\"margin:0 0 6px;font-size:20px;color:#102a43;\">\n          ${text(row.property_name)} ${lateBadge}\n        </h2>\n\n        <table style=\"width:100%;border-collapse:collapse;margin-top:14px;font-size:14px;\">\n          <tr>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Vacant Units</strong></td>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${row.vacant_units}</td>\n          </tr>\n          <tr>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Ready Vacants</strong></td>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${row.ready_vacants}</td>\n          </tr>\n          <tr>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Not Ready Vacants</strong></td>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${row.not_ready_vacants}</td>\n          </tr>\n          <tr>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Delinquent Count</strong></td>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${row.delinquent_count}</td>\n          </tr>\n          <tr>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Delinquent Amount</strong></td>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${money(row.delinquent_amount)}</td>\n          </tr>\n          <tr>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Turns in Progress</strong></td>\n            <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${row.turns_in_progress}</td>\n          </tr>\n          <tr>\n            <td style=\"padding:8px;\"><strong>Work Orders Over 7 Days</strong></td>\n            <td style=\"padding:8px;\">${row.work_orders_over_7_days}</td>\n          </tr>\n        </table>\n\n        <div style=\"margin-top:16px;\">\n          <p><strong>Biggest Issue:</strong><br>${text(row.biggest_issue_text)}</p>\n          <p><strong>Help Needed:</strong><br>${text(row.help_needed_text)}</p>\n          <p><strong>Struggling Units / Leasing Notes:</strong><br>${text(row.struggling_units_text)}</p>\n        </div>\n      </div>\n    `;\n  })\n  .join(\"\");\n\nconst html = `\n<!DOCTYPE html>\n<html>\n<body style=\"margin:0;padding:0;background:#f5f7fa;font-family:Arial,Helvetica,sans-serif;color:#243b53;\">\n  <div style=\"max-width:760px;margin:0 auto;padding:24px;\">\n    <div style=\"background:#102a43;color:#ffffff;padding:22px;border-radius:12px 12px 0 0;\">\n      <h1 style=\"margin:0;font-size:24px;\">Weekly Manager Report</h1>\n      <p style=\"margin:8px 0 0;\">${managerName} — Week of ${weekStartDate}</p>\n    </div>\n\n    <div style=\"background:#ffffff;padding:18px;border-left:1px solid #d9e2ec;border-right:1px solid #d9e2ec;\">\n      <h2 style=\"margin-top:0;color:#102a43;\">Snapshot Summary</h2>\n\n      <table style=\"width:100%;border-collapse:collapse;font-size:14px;\">\n        <tr>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Total Vacants</strong></td>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${total.vacant_units}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Ready / Not Ready</strong></td>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${total.ready_vacants} / ${total.not_ready_vacants}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Total Delinquent Accounts</strong></td>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${total.delinquent_count}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Total Delinquent Amount</strong></td>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${money(total.delinquent_amount)}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\"><strong>Turns in Progress</strong></td>\n          <td style=\"padding:8px;border-bottom:1px solid #edf2f7;\">${total.turns_in_progress}</td>\n        </tr>\n        <tr>\n          <td style=\"padding:8px;\"><strong>Work Orders Over 7 Days</strong></td>\n          <td style=\"padding:8px;\">${total.work_orders_over_7_days}</td>\n        </tr>\n      </table>\n\n      ${propertySections}\n    </div>\n\n    <div style=\"background:#eef2f7;padding:14px;border-radius:0 0 12px 12px;border:1px solid #d9e2ec;font-size:12px;color:#52606d;\">\n      This email is generated from the weekly manager reporting baseline.\n    </div>\n  </div>\n</body>\n</html>\n`;\n\nreturn [\n  {\n    json: {\n      manager_name: managerName,\n      week_start_date: weekStartDate,\n      subject: `Weekly Manager Report - ${managerName} - ${weekStartDate}`,\n      html,\n    },\n  },\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          496,
+          0
+        ],
+        "id": "3aeb08c1-2d63-4aea-b111-a91c7fbd0fd0",
+        "name": "Code in JavaScript"
       }
     ],
     "connections": {
@@ -231,6 +324,11 @@
               "node": "Insert Weekly Report Rows",
               "type": "main",
               "index": 0
+            },
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
             }
           ]
         ]
@@ -245,10 +343,26 @@
             }
           ]
         ]
+      },
+      "Send a message": {
+        "main": [
+          []
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Send a message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Brandon Stewart",
-    "name": "Version 160f00a9",
+    "name": "Version 0a24c148",
     "description": "",
     "autosaved": true
   },
