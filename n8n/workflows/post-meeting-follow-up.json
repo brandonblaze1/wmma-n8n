@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-29T15:51:20.007Z",
+  "updatedAt": "2026-05-04T15:40:42.247Z",
   "createdAt": "2026-04-23T12:41:36.076Z",
   "id": "4P1nQHSRPUnnwbpy",
   "name": "WMMA Post-Meeting Follow-Up",
@@ -19,7 +19,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const meeting = $json;\n\nconst directory = {\n  \"Brandon Stewart\": \"brandon@blazeproperty.com\",\n  \"Amy\": \"amy@blazeproperty.com\",\n  \"Breanna\": \"breanna@blazeproperty.com\",\n  \"Debbie\": \"debbie@blazeproperty.com\",\n  \"Dede\": \"dede@blazeproperty.com\",\n  \"Shelbie\": \"shelbie@blazeproperty.com\",\n  \"Chris\": \"chris@blazeproperty.com\",\n  \"Ashlie\": \"ashlie@blazeproperty.com\"\n};\n\nconst required = [\"brandon@blazeproperty.com\"];\n\nconst participants = meeting.participants || [];\n\nconst resolved = [];\n\nfor (const p of participants) {\n  if (!p) continue;\n  const v = String(p).trim();\n\n  if (v.includes('@')) {\n    resolved.push(v.toLowerCase());\n    continue;\n  }\n\n  if (directory[v]) {\n    resolved.push(directory[v]);\n  }\n}\n\nconst fallback = directory[meeting.manager_name];\nif (fallback) resolved.push(fallback);\n\nconst recipients = [...new Set([...required, ...resolved])];\n\nreturn [{ json: { ...meeting, recipients } }];"
+        "jsCode": "const meeting = $json;\n\nconst directory = {\n  \"Brandon Stewart\": \"brandon@blazeproperty.com\",\n  \"Amy\": \"amy@blazeproperty.com\",\n  \"Breanna\": \"breanna@blazeproperty.com\",\n  \"Debbie\": \"debbie@blazeproperty.com\",\n  \"Dede\": \"dede@blazeproperty.com\",\n  \"Shelbie\": \"shelbie@blazeproperty.com\",\n  \"Chris\": \"chris@blazeproperty.com\",\n  \"Ashlie\": \"ashlie@blazeproperty.com\"\n};\n\nconst required = [\"brandon@blazeproperty.com\", \"tammie@blazeproperty.com\"];\n\nconst participants = meeting.participants || [];\n\nconst resolved = [];\n\nfor (const p of participants) {\n  if (!p) continue;\n  const v = String(p).trim();\n\n  if (v.includes('@')) {\n    resolved.push(v.toLowerCase());\n    continue;\n  }\n\n  if (directory[v]) {\n    resolved.push(directory[v]);\n  }\n}\n\nconst fallback = directory[meeting.manager_name];\nif (fallback) resolved.push(fallback);\n\nconst recipients = [...new Set([...required, ...resolved])];\n\nreturn [{ json: { ...meeting, recipients } }];"
       },
       "id": "4ff4d9c9-46c6-4d91-bb29-09c99f344263",
       "name": "Resolve Recipients",
@@ -117,8 +117,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "b89eff71-54d7-48ce-a2ef-cb9374fa9b92",
-  "activeVersionId": "b89eff71-54d7-48ce-a2ef-cb9374fa9b92",
+  "versionId": "b9cfbe1c-bc46-4803-889f-1dc03116168f",
+  "activeVersionId": "b9cfbe1c-bc46-4803-889f-1dc03116168f",
   "triggerCount": 0,
   "shared": [
     {
@@ -130,9 +130,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-04-29T15:50:26.410Z",
-    "createdAt": "2026-04-29T03:15:27.029Z",
-    "versionId": "b89eff71-54d7-48ce-a2ef-cb9374fa9b92",
+    "updatedAt": "2026-05-04T15:40:49.395Z",
+    "createdAt": "2026-05-04T15:40:42.250Z",
+    "versionId": "b9cfbe1c-bc46-4803-889f-1dc03116168f",
     "workflowId": "4P1nQHSRPUnnwbpy",
     "nodes": [
       {
@@ -148,7 +148,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const meeting = $json;\n\nconst directory = {\n  \"Brandon Stewart\": \"brandon@blazeproperty.com\",\n  \"Amy\": \"amy@blazeproperty.com\",\n  \"Breanna\": \"breanna@blazeproperty.com\",\n  \"Debbie\": \"debbie@blazeproperty.com\",\n  \"Dede\": \"dede@blazeproperty.com\",\n  \"Shelbie\": \"shelbie@blazeproperty.com\",\n  \"Chris\": \"chris@blazeproperty.com\",\n  \"Ashlie\": \"ashlie@blazeproperty.com\"\n};\n\nconst required = [\"brandon@blazeproperty.com\"];\n\nconst participants = meeting.participants || [];\n\nconst resolved = [];\n\nfor (const p of participants) {\n  if (!p) continue;\n  const v = String(p).trim();\n\n  if (v.includes('@')) {\n    resolved.push(v.toLowerCase());\n    continue;\n  }\n\n  if (directory[v]) {\n    resolved.push(directory[v]);\n  }\n}\n\nconst fallback = directory[meeting.manager_name];\nif (fallback) resolved.push(fallback);\n\nconst recipients = [...new Set([...required, ...resolved])];\n\nreturn [{ json: { ...meeting, recipients } }];"
+          "jsCode": "const meeting = $json;\n\nconst directory = {\n  \"Brandon Stewart\": \"brandon@blazeproperty.com\",\n  \"Amy\": \"amy@blazeproperty.com\",\n  \"Breanna\": \"breanna@blazeproperty.com\",\n  \"Debbie\": \"debbie@blazeproperty.com\",\n  \"Dede\": \"dede@blazeproperty.com\",\n  \"Shelbie\": \"shelbie@blazeproperty.com\",\n  \"Chris\": \"chris@blazeproperty.com\",\n  \"Ashlie\": \"ashlie@blazeproperty.com\"\n};\n\nconst required = [\"brandon@blazeproperty.com\", \"tammie@blazeproperty.com\"];\n\nconst participants = meeting.participants || [];\n\nconst resolved = [];\n\nfor (const p of participants) {\n  if (!p) continue;\n  const v = String(p).trim();\n\n  if (v.includes('@')) {\n    resolved.push(v.toLowerCase());\n    continue;\n  }\n\n  if (directory[v]) {\n    resolved.push(directory[v]);\n  }\n}\n\nconst fallback = directory[meeting.manager_name];\nif (fallback) resolved.push(fallback);\n\nconst recipients = [...new Set([...required, ...resolved])];\n\nreturn [{ json: { ...meeting, recipients } }];"
         },
         "id": "4ff4d9c9-46c6-4d91-bb29-09c99f344263",
         "name": "Resolve Recipients",
@@ -232,7 +232,7 @@
       }
     },
     "authors": "Brandon Stewart",
-    "name": "Version b89eff71",
+    "name": "Version b9cfbe1c",
     "description": "",
     "autosaved": true
   },
