@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-29T15:52:30.289Z",
+  "updatedAt": "2026-05-05T17:00:37.072Z",
   "createdAt": "2026-04-22T16:22:41.279Z",
   "id": "WFBtaAHdgBUqkE4q",
   "name": "WMMA Notes Intake",
@@ -13,7 +13,7 @@
       "type": "n8n-nodes-base.cron",
       "typeVersion": 1,
       "position": [
-        256,
+        176,
         80
       ]
     },
@@ -216,7 +216,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "50c61f9f-27f8-43aa-86ed-a78f127be79b",
+  "versionId": "e2b783f7-a74b-4eaf-a33a-10aad82271e2",
   "activeVersionId": "50c61f9f-27f8-43aa-86ed-a78f127be79b",
   "triggerCount": 1,
   "shared": [
