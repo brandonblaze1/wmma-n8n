@@ -1,0 +1,436 @@
+{
+  "updatedAt": "2026-04-11T22:45:15.786Z",
+  "createdAt": "2026-04-11T11:50:43.211Z",
+  "id": "Dg9SqGvGzVdeuaD1",
+  "name": "Lookup Owner Outreach Webhook",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "owner-outreach/lookup",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -432,
+        0
+      ],
+      "id": "8ce7868a-393f-4ae2-9468-f819164d6221",
+      "name": "Webhook — Lookup Landing Record",
+      "webhookId": "c5d23a2b-6f6d-4d92-bdb2-5e17801d8dd5"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const body = item.json.body ?? item.json;\n\n  return {\n    json: {\n      landing_slug: body.landing_slug ?? '',\n      tracking_code: body.tracking_code ?? '',\n      event_source: body.event_source ?? 'direct'\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        0
+      ],
+      "id": "13bd3a54-7fa8-4d9c-99ad-e667bf2ab4e3",
+      "name": "Normalize Lookup Input"
+    },
+    {
+      "parameters": {
+        "jsCode": "const row = items[0]?.json ?? {};\n\nreturn [{\n  json: {\n    landing_slug: row.landing_slug ?? '',\n    tracking_code: row.tracking_code ?? '',\n    event_source: $('Normalize Lookup Input').first().json.event_source ?? 'direct',\n    listing_inventory_id: row.listing_inventory_id ?? '',\n\n    headline: 'Is your rental getting seen… or just listed?',\n    city_label: 'Amarillo and the surrounding area',\n\n    owner_name: row.owner_name ?? '',\n    mailing_address: row.mailing_address ?? '',\n\n    property_address: row.street_address ?? '',\n    property_city: row.city ?? '',\n    property_state: row.state ?? '',\n    property_zip: row.zip ?? '',\n\n    short_url: row.short_url ?? '',\n    campaign_step: row.campaign_step ?? 1,\n    status: row.status ?? ''\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        0
+      ],
+      "id": "5887eec5-df38-4373-8a82-96513135e554",
+      "name": "Build Lookup Response"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        608,
+        0
+      ],
+      "id": "453346d1-623b-421b-870e-5438f83212bc",
+      "name": "Respond — Lookup Landing Record"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  q.id,\n  q.listing_inventory_id,\n  q.property_lookup_result_id,\n  q.owner_name,\n  q.mailing_address,\n  q.tracking_code,\n  q.landing_slug,\n  q.short_url,\n  q.campaign_step,\n  q.status,\n\n  li.street_address,\n  li.city,\n  li.state,\n  li.zip\n\nFROM owner_outreach_queue q\nLEFT JOIN listing_inventory li\n  ON li.id = q.listing_inventory_id\n\nWHERE q.landing_slug = $1\nLIMIT 1;",
+        "options": {
+          "queryReplacement": "={{ [ $json.landing_slug ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -16,
+        0
+      ],
+      "id": "be09f6e7-25ca-4c5d-ac5a-68ed15d1b212",
+      "name": "SQL — Get Queue Record",
+      "credentials": {
+        "mySql": {
+          "id": "a3LZuEERCY9MEIMg",
+          "name": "Blaze Marketing Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a44656bc-5e36-4f6e-93c1-41b92853de5d",
+              "leftValue": "={{$json.id}}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        160,
+        0
+      ],
+      "id": "bd2a5f46-e081-433e-9218-def6e5b3cafd",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"ok\": false,\n  \"message\": \"Landing record not found.\"\n}",
+        "options": {
+          "responseCode": 404
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        416,
+        144
+      ],
+      "id": "bee0db7a-4a6e-4369-87c0-0eb2db1a1986",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Webhook — Lookup Landing Record": {
+      "main": [
+        [
+          {
+            "node": "Normalize Lookup Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Lookup Input": {
+      "main": [
+        [
+          {
+            "node": "SQL — Get Queue Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Lookup Response": {
+      "main": [
+        [
+          {
+            "node": "Respond — Lookup Landing Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SQL — Get Queue Record": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Build Lookup Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "3WJZrZsLJqgg1EIM",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "541a382a-15d0-4e17-b569-3c14f5150a86",
+  "activeVersionId": "541a382a-15d0-4e17-b569-3c14f5150a86",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-04-11T11:50:43.211Z",
+      "createdAt": "2026-04-11T11:50:43.211Z",
+      "role": "workflow:owner",
+      "workflowId": "Dg9SqGvGzVdeuaD1",
+      "projectId": "4YBqTudLOBUQfTvU"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-04-11T22:45:18.615Z",
+    "createdAt": "2026-04-11T22:45:15.789Z",
+    "versionId": "541a382a-15d0-4e17-b569-3c14f5150a86",
+    "workflowId": "Dg9SqGvGzVdeuaD1",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "owner-outreach/lookup",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -432,
+          0
+        ],
+        "id": "8ce7868a-393f-4ae2-9468-f819164d6221",
+        "name": "Webhook — Lookup Landing Record",
+        "webhookId": "c5d23a2b-6f6d-4d92-bdb2-5e17801d8dd5"
+      },
+      {
+        "parameters": {
+          "jsCode": "return items.map(item => {\n  const body = item.json.body ?? item.json;\n\n  return {\n    json: {\n      landing_slug: body.landing_slug ?? '',\n      tracking_code: body.tracking_code ?? '',\n      event_source: body.event_source ?? 'direct'\n    }\n  };\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -224,
+          0
+        ],
+        "id": "13bd3a54-7fa8-4d9c-99ad-e667bf2ab4e3",
+        "name": "Normalize Lookup Input"
+      },
+      {
+        "parameters": {
+          "jsCode": "const row = items[0]?.json ?? {};\n\nreturn [{\n  json: {\n    landing_slug: row.landing_slug ?? '',\n    tracking_code: row.tracking_code ?? '',\n    event_source: $('Normalize Lookup Input').first().json.event_source ?? 'direct',\n    listing_inventory_id: row.listing_inventory_id ?? '',\n\n    headline: 'Is your rental getting seen… or just listed?',\n    city_label: 'Amarillo and the surrounding area',\n\n    owner_name: row.owner_name ?? '',\n    mailing_address: row.mailing_address ?? '',\n\n    property_address: row.street_address ?? '',\n    property_city: row.city ?? '',\n    property_state: row.state ?? '',\n    property_zip: row.zip ?? '',\n\n    short_url: row.short_url ?? '',\n    campaign_step: row.campaign_step ?? 1,\n    status: row.status ?? ''\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          400,
+          0
+        ],
+        "id": "5887eec5-df38-4373-8a82-96513135e554",
+        "name": "Build Lookup Response"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          608,
+          0
+        ],
+        "id": "453346d1-623b-421b-870e-5438f83212bc",
+        "name": "Respond — Lookup Landing Record"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  q.id,\n  q.listing_inventory_id,\n  q.property_lookup_result_id,\n  q.owner_name,\n  q.mailing_address,\n  q.tracking_code,\n  q.landing_slug,\n  q.short_url,\n  q.campaign_step,\n  q.status,\n\n  li.street_address,\n  li.city,\n  li.state,\n  li.zip\n\nFROM owner_outreach_queue q\nLEFT JOIN listing_inventory li\n  ON li.id = q.listing_inventory_id\n\nWHERE q.landing_slug = $1\nLIMIT 1;",
+          "options": {
+            "queryReplacement": "={{ [ $json.landing_slug ] }}"
+          }
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -16,
+          0
+        ],
+        "id": "be09f6e7-25ca-4c5d-ac5a-68ed15d1b212",
+        "name": "SQL — Get Queue Record",
+        "credentials": {
+          "mySql": {
+            "id": "a3LZuEERCY9MEIMg",
+            "name": "Blaze Marketing Connection"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "a44656bc-5e36-4f6e-93c1-41b92853de5d",
+                "leftValue": "={{$json.id}}",
+                "rightValue": "",
+                "operator": {
+                  "type": "number",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          160,
+          0
+        ],
+        "id": "bd2a5f46-e081-433e-9218-def6e5b3cafd",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "{\n  \"ok\": false,\n  \"message\": \"Landing record not found.\"\n}",
+          "options": {
+            "responseCode": 404
+          }
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          416,
+          144
+        ],
+        "id": "bee0db7a-4a6e-4369-87c0-0eb2db1a1986",
+        "name": "Respond to Webhook"
+      }
+    ],
+    "connections": {
+      "Webhook — Lookup Landing Record": {
+        "main": [
+          [
+            {
+              "node": "Normalize Lookup Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalize Lookup Input": {
+        "main": [
+          [
+            {
+              "node": "SQL — Get Queue Record",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Lookup Response": {
+        "main": [
+          [
+            {
+              "node": "Respond — Lookup Landing Record",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "SQL — Get Queue Record": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Build Lookup Response",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Brandon Stewart",
+    "name": "Version 541a382a",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}
