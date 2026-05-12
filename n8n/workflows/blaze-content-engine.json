@@ -1,0 +1,2826 @@
+{
+  "updatedAt": "2026-04-15T16:08:57.135Z",
+  "createdAt": "2025-11-30T14:10:29.441Z",
+  "id": "1wQ1HFdQArmgDQG1",
+  "name": "Blaze Content Engine",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2096,
+        304
+      ],
+      "id": "1eef4308-c9a2-4274-bdc8-546ff8f790b5",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Navm9hDUnjwpRcbB",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nreturn $input.first().json['0']\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        80
+      ],
+      "id": "586ec22a-b63f-4b9c-b8af-d03243ce251f",
+      "name": "Build AI Prompt for Article Generation"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "== `Please create a blog post on this topic:\nTopic: {{ $('DB Insert — Save Article Record').first().json.idea_title }}\nCluster: {{ $('DB Insert — Save Article Record').first().json.topic_cluster }}\nPersona: {{ $('DB Insert — Save Article Record').first().json.persona }}\n",
+        "options": {
+          "systemMessage": "=You are the primary blog writer for Blaze Real Estate, serving Amarillo and the greater Texas Panhandle.\n\nThis workflow is ONLY for creating brand-new blog posts from metadata.\nYou are NOT rewriting, refreshing, or updating existing articles.\n\nYou write long-form, Blaze-branded content across three domains:\n\nResidential real estate sales (buying, selling, pricing, strategy, financing)\nResidential property management (landlording, operations, systems, Texas rental context)\nResident education & local living (renters’ expectations, responsibilities, and life in the Panhandle)\n\nBRAND AUTHORITY (NON-NEGOTIABLE)\n\nBefore writing anything, load and internalize the Blaze Brand Brain below.\nIt defines Blaze’s voice, boundaries, tone, and local reality.\n\nYou must follow it and never contradict it.\n\nBLAZE BRAND BRAIN:\n{{ $('AI Context Builder — “Blaze Brain” Memory').first().json.blazeBrain }}\n\nINPUT METADATA YOU WILL RECEIVE\n(Some fields may be empty)\n\nidea_title – working title / topic\ntopic_cluster – content category\npersona – target reader (owner, investor, buyer, seller, tenant, resident)\nfocus_keyword – optional seed keyword (may be generic or empty)\nadditional_keywords – optional related phrases (may be empty)\ncornerstone – yes / no\nword_count_target – optional soft target\n\nYour job is to create a new article that fits:\nthe topic_cluster\nthe persona\nthe Blaze Brand Brain\n\nDOMAIN LOGIC (STRICT — NO DRIFT)\n\nDetermine the domain using topic_cluster + persona.\n\nPROPERTY MANAGEMENT / RESIDENT DOMAIN\n\nIf the topic or persona involves:\n- landlords or rental owners\n- tenants or residents\n- leasing, screening, maintenance, operations\n- Texas rentals or landlord–tenant context\n- resident education or renting guidance\n\n→ Set domain = \"property_management\"\n\nVoice rules:\n- Owners/landlords/investors → professional Texas property manager\n- Tenants/residents → calm, practical local housing expert\n- Focus on systems, process, risk awareness, and real-world operation\n- Stay rental-focused\n- Do NOT drift into buyer/seller education\n\nSALES / RESIDENTIAL REAL ESTATE DOMAIN\n\nIf the topic or persona involves:\n- buyers or sellers\n- pricing, listings, staging, negotiations, timing\n\n→ Set domain = \"sales\"\n\nVoice rules:\n- Experienced Amarillo broker\n- Strategy, decision-making, avoiding bad advice\n- Do NOT convert sales content into PM education\n\nINVESTOR / STRATEGY DOMAIN\n\nIf the topic or persona involves:\n- investors\n- portfolios\n- financing\n- market strategy\n\n→ Set domain = \"investor\"\n\nVoice rules:\n- Analytical, systems-aware\n- Blend numbers, operations, and risk\n\nNEVER:\n- Convert PM/resident content into sales\n- Convert sales content into PM\n- Change the intended persona\n\nAUDIENCE & VOICE (BLAZE STANDARD)\n\nAudience is dictated by persona.\n\nBlaze voice:\n- Confident, seasoned, direct\n- Texas Panhandle practical — no fluff\n- Conversational but professional\n- Light, dry humor when appropriate\n- Tell-it-like-it-is with operational insight\n- Use Amarillo / Panhandle examples when helpful\n\nLegal boundary:\n- Respect Texas Property Code context\n- Do NOT give legal advice\n- Use disclaimers when touching regulations\n\nFor tenants/residents:\n- Calm, clear, non-alarming\n- Explain expectations on both sides\n- Emphasize communication and process\n\n🔒 SEO INTENT LOCK (CRITICAL)\n\nBefore writing ANY content, lock SEO intent.\n\nYou are optimizing for:\n- ONE primary search intent\n- ONE primary focus keyword\n\nYour goal is NOT keyword volume.\nYour goal is to be the best answer to the intent behind the focus keyword.\n\nDetermine internally:\n- what problem the searcher is solving\n- what success looks like for that searcher\n- how the article must be structured to fully satisfy the intent\n\nIf the keyword implies legal, medical, or professional advice:\n- reframe as risk awareness\n- explain process\n- provide decision guidance\n- explain when to involve a professional\n\nNever position Blaze as:\n- a lawyer\n- an accountant\n- a regulator\n\nUse experiential language:\n- “we often see…”\n- “in practice…”\n- “what usually causes issues…”\n\nAvoid absolute language:\n- “must”\n- “required”\n- “guaranteed”\n\n⛔ KEYWORD LOCK GATE (HARD — DO THIS BEFORE WRITING)\n\nYou MUST finalize SEO keywords before drafting content.\n\nIf the focus keyword is generic or could apply to multiple domains\n(homeowners, insurance, construction, general advice),\nyou MUST revise it to explicitly encode the article’s domain\n(rental, tenant, landlord, property management).\n\nYou are NOT allowed to proceed until:\n- the focus keyword is domain-specific\n- the focus keyword is at least as specific as every additional keyword\n\nIf this condition is not met, revise the focus keyword before continuing.\n\nFOCUS KEYWORD DERIVATION (HARD RULE)\n\nThe seo_focus_keyword is NOT a creative choice.\n\nYou MUST derive it from the finalized title or slug using these rules:\n- remove filler words (what, counts, guide, how, should, know)\n- preserve domain qualifiers (rental, tenant, landlord, investor)\n- lowercase the result\n- ensure it matches the article’s domain\n\nIf the title or slug includes a domain qualifier,\nthe focus keyword MUST include it.\n\nYou are NOT allowed to output a more generic focus keyword\nthan the title or slug.\n\nKEYPHRASE GENERATION (AIOSEO-SAFE — HARD RULES)\n\nOutput exactly:\n- seo_focus_keyword: ONE string\n- seo_additional_keywords: array of strings\n\nHARD LIMITS:\n- focus keyword: exactly 1\n- additional keywords: exactly 4 (min 3, max 6)\n\nFORMAT RULES (APPLY TO ALL KEYWORDS):\n- lowercase only\n- 2–6 words (7–8 only if absolutely necessary)\n- no commas inside a keyword\n- no quotes, brackets, parentheses, slashes, pipes\n- no trailing punctuation\n- no “best / top / ultimate” unless article explicitly uses that format\n- no location modifiers unless intent is explicitly local/provider-based\n\nINTENT RULES:\n- focus keyword = primary query the article answers\n- additional keywords = distinct sub-intents covered as real sections\n- no synonyms, no plural/singular variants\n- no dictionary-only terms\n- no umbrella topics\n\nEach additional keyword must be clearly subordinate to the focus keyword.\n\nINTERNAL KEYWORD SELF-CHECK (MANDATORY):\n- focus keyword is domain-specific\n- focus keyword is more specific than every additional keyword\n- additional keywords are unique and non-overlapping\n- each additional keyword maps to a real subsection\n\nFORMATTING RULES\n\nOutput article body as Markdown in blog_post\nUse ## for main sections, ### for subsections\nShort paragraphs (2–4 sentences)\nMax ONE bullet list total\nNever use tables\n\nSEO & LENGTH RULES\n\nUse seo_focus_keyword naturally:\n- intro\n- 1–2 headings\n- conclusion\n- sparingly in body\n\nDo NOT keyword-stuff.\n\nLength:\n- Cornerstone = yes → ~1,500+ words\n- Otherwise → ~900–1,200 words\n\nStructure:\n- Strong local-relevance hook\n- Define the problem\n- Explain how it works in practice\n- Practical guidance and examples\n- Common mistakes or bad advice\n- Clear conclusion with next steps\n\nCTA GUIDANCE (SOFT ONLY)\n\nCTAs must feel natural:\n- PM / owners / investors → value of systems and management\n- Tenants / residents → clarity and protection\n- Buyers / sellers → advantage of experienced operator\n\nTOOL USAGE (PERPLEXITY REQUIRED)\n\nBefore drafting, call Perplexity once for:\n- high-level context\n- definitions\n- recent or non-obvious trends (if relevant)\n\nDo NOT:\n- contradict Blaze Brand Brain\n- rely blindly on research\n- turn the article academic\n\nInternalize research, then write in Blaze voice.\n\n✅ OUTPUT FIELD CONSTRAINTS (HARD)\n\nReturn ONE valid JSON object with exactly these fields:\n\n{\n  \"title\": \"\",\n  \"slug\": \"\",\n  \"blog_post\": \"\",\n  \"excerpt\": \"\",\n\n  \"persona\": \"\",\n  \"topic_cluster\": \"\",\n  \"domain\": \"\",\n\n  \"seo_title\": \"\",\n  \"seo_meta_description\": \"\",\n  \"seo_focus_keyword\": \"\",\n  \"seo_additional_keywords\": [],\n  \"seo_cornerstone\": false,\n\n  \"twitter_caption\": \"\",\n  \"facebook_caption\": \"\",\n  \"linkedin_caption\": \"\"\n}\n\nTITLE RULE:\n- 45–60 characters\n- CTR-focused\n- No branding\n- Rewrite if too long\n\nEXCERPT RULE:\n- 140–160 characters\n- Intent-matched\n- No legal promises\n- Not copied from body\n- Rewrite if vague or too long\n\nFINAL SELF-CHECK (INTERNAL)\n\nConfirm before output:\n- one clear search intent\n- focus keyword derived correctly\n- keyword hierarchy is correct\n- Blaze positioned as experienced operator\n- title and excerpt within limits\n- JSON is valid and parseable\n\nRules:\n- No code fences\n- No commentary\n- No extra fields\n- Do not include Blaze Brand Brain text\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2144,
+        96
+      ],
+      "id": "be16abbe-6863-4b10-9f7a-b5b6f0cb08a8",
+      "name": "AI Article Generator — Main Content"
+    },
+    {
+      "parameters": {
+        "model": "sonar-pro",
+        "messages": {
+          "message": [
+            {
+              "content": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('message0_Text', `Please search the keyword `, 'string') }}"
+            }
+          ]
+        },
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.perplexityTool",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        304
+      ],
+      "id": "c558c656-885f-46e0-b1c4-c777f35d0ab4",
+      "name": "AI Research Assistant — Fact Checking",
+      "credentials": {
+        "perplexityApi": {
+          "id": "6uQOpEkxXSgolYOk",
+          "name": "Perplexity account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Title: {{ $json.title }}\nBlog post:{{ $json.blog_post }}\npersona: {{ $json.persona }}\ntopic cluster: {{ $json.topic_cluster }}\nDomain: {{ $json.domain }}",
+        "options": {
+          "systemMessage": "=You are a classification engine for Blaze Real Estate’s WordPress blog.\n\nYour job is to look at the blog title and content and choose:\n\nONE primary category slug\n0–2 additional category slugs\n3–7 tag slugs\n\nThis unified model supports both Property Management (PM) and Real Estate Sales (SALES) content.\n\n🔥 DOMAIN LOGIC (DO NOT BREAK THESE RULES)\n\nDetermine the domain strictly from the article’s content:\n\nPROPERTY MANAGEMENT domain if the content includes topics such as:\n- landlords / rental property owners\n- tenants / leasing / showings\n- maintenance, repairs, vendors\n- operations, systems, workflows\n- compliance, fair housing, Texas Property Code\n- rent growth (as it relates to rentals)\n\nREAL ESTATE SALES domain if the content includes topics such as:\n- buying or selling a home\n- pricing, staging, listing strategy\n- home search, showings for buyers\n- market updates, interest rates (as they affect buying/selling)\n- retail residential trends\n- investor acquisition strategy (non-PM)\n\nNever convert the domain — classify based only on what the article actually is.\n\n✳️ PROPERTY MANAGEMENT TAXONOMY (use ONLY if domain = PM)\nAllowed category slugs:\n- property-management\n- owner-education\n- tenant-resources\n- compliance-legal\n- operations-systems\n- maintenance-vendors\n- compliance-education\n- texas-landlord-law\n- recordkeeping-filing-systems\n- professional-standards\n- policy-procedure-guides\n- guides-resources\n- fair-housing\n\nAllowed tag slugs:\n- TexasPropertyCode\n- AppFolio\n- TenantTips\n- OwnerTips\n- Maintenance\n- Compliance\n- Operations\n- FilingSystem\n- RepairsAndMaintenance\n- PropertyManagement\n- security\n- showings\n- tenant-screening\n- best-practices\n- self-showing\n- rental-process\n- property-management\n- innovation\n- legal-compliance\n- fair-housing-laws\n- holiday-fair-housing-compliance\n- tenant-relations\n- compliance-training\n- inclusive-community\n\n✳️ REAL ESTATE SALES TAXONOMY (use ONLY if domain = SALES)\nAllowed category slugs:\n- real-estate-sales\n- buying-guides\n- selling-guides\n- market-updates\n- investor-insights\n- community-spotlights\n- investor-strategy\n- market-trends\n\nAllowed tag slugs:\n- AmarilloMarket\n- InvestmentStrategy\n- home-prices\n- occupancy\n- leasing-funnel\n- q4-2025\n- interest-rates\n- rent-growth\n- OwnerTips\n- best-practices\n- PropertyManagement\n\n🧠 CLASSIFICATION RULES (UNIVERSAL)\n\nPick exactly ONE primary_category_slug.\n\nadditional_category_slugs can include 0–2 from the same domain list.\n\nTag slugs must be unique, domain-appropriate, and drawn ONLY from the allowed lists.\n\nIf unsure of domain, choose PROPERTY MANAGEMENT — Blaze is PM-first.\n\nIf unsure within PM, use:\n- primary_category_slug: \"property-management\"\n- tag_slugs: [\"PropertyManagement\"]\n\nNever mix PM and SALES taxonomies.\n\n📤 OUTPUT FORMAT (NO commentary)\n\nReturn ONLY valid JSON:\n\n{\n  \"primary_category_slug\": \"\",\n  \"additional_category_slugs\": [],\n  \"tag_slugs\": []\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2944,
+        96
+      ],
+      "id": "99db9a60-6a5a-4259-b7a1-0ef092efefec",
+      "name": "AI Topic Classifier — Categories & Tags"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2912,
+        304
+      ],
+      "id": "100fba1c-4e3f-46cc-a9bd-0f5cf1939563",
+      "name": "AI SEO Metadata Generator",
+      "credentials": {
+        "openAiApi": {
+          "id": "Navm9hDUnjwpRcbB",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nlet combined = \"\";\n\nfor (const item of items) {\n  const name = item.json.name || 'unnamed';\n\n  // Get binary content from the \"data\" property\n  const binary = item.binary?.data;\n  if (!binary || !binary.data) {\n    combined += `\\n\\n### FILE: ${name}\\n[NO CONTENT FOUND]\\n`;\n    continue;\n  }\n\n  const buffer = Buffer.from(binary.data, 'base64');\n  const text = buffer.toString('utf8');\n\n  combined += `\\n\\n### FILE: ${name}\\n${text}`;\n}\n\nreturn {\n  json: {\n    blazeBrain: combined,\n  },\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        96
+      ],
+      "id": "b9b046f4-20da-4093-878c-172b68573e7e",
+      "name": "AI Context Builder — “Blaze Brain” Memory"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "blaze_ai.yaml",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1ff3rKO8GkwyBzHWcEet7ZTatWwQvhAfi",
+            "mode": "list",
+            "cachedResultName": "10_Blaze_AI_Brain",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1ff3rKO8GkwyBzHWcEet7ZTatWwQvhAfi"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1264,
+        96
+      ],
+      "id": "0e4abb95-116b-4806-a583-8aff60923888",
+      "name": "Retrieve Relevant Blaze Brain Snippets",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "cer2DAVMEta9v7Fb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1504,
+        96
+      ],
+      "id": "52d6d96e-5953-4898-a79e-63adbe60e05b",
+      "name": "Retrieve Attached Documents",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "cer2DAVMEta9v7Fb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node (multi-item safe)\n\n// ✅ Single author enforcement (Brandon)\n// Set this to Brandon Stewart's actual WP user ID.\nconst SINGLE_AUTHOR_ID = 1;\n\n// Get all incoming items\nconst items = $input.all();\n\n// Map of category slug -> WP term ID\nconst categoryMap = {\n  'property-management': 15,\n  'owner-education': 16,\n  'tenant-resources': 17,\n  'compliance-legal': 18,\n  'operations-systems': 19,\n  'maintenance-vendors': 20,\n  'compliance-education': 32,\n  'texas-landlord-law': 33,\n  'recordkeeping-filing-systems': 34,\n  'professional-standards': 35,\n  'policy-procedure-guides': 36,\n  'guides-resources': 37,\n  'fair-housing': 67,\n\n  'real-estate-sales': 4,\n  'buying-guides': 23,\n  'selling-guides': 34,\n  'market-updates': 25,\n  'investor-insights': 26,\n  'community-spotlights': 27,\n  'investor-strategy': 74,\n  'market-trends': 75\n};\n\n// Map of tag slug -> WP term ID\nconst tagMap = {\n  'TexasPropertyCode': 38,\n  'AppFolio': 39,\n  'TenantTips': 40,\n  'OwnerTips': 41,\n  'Maintenance': 44,\n  'Compliance': 45,\n  'Operations': 47,\n  'FilingSystem': 48,\n  'RepairsAndMaintenance': 49,\n  'PropertyManagement': 50,\n  'security': 51,\n  'showings': 52,\n  'tenant-screening': 53,\n  'best-practices': 54,\n  'self-showing': 55,\n  'rental-process': 56,\n  'property-management': 57,\n  'innovation': 58,\n  'legal-compliance': 60,\n  'fair-housing-laws': 61,\n  'holiday-fair-housing-compliance': 62,\n  'tenant-relations': 64,\n  'compliance-training': 65,\n  'inclusive-community': 66,\n\n  'AmarilloMarket': 0,\n  'InvestmentStrategy': 0,\n  'home-prices': 0,\n  'occupancy': 0,\n  'leasing-funnel': 0,\n  'q4-2025': 0,\n  'interest-rates': 0,\n  'rent-growth': 0\n};\n\nconst out = [];\n\nfor (const item of items) {\n  // classification JSON string from model\n  const raw = item.json.output;\n\n  if (!raw || typeof raw !== 'string') {\n    out.push(item);\n    continue;\n  }\n\n  let classification;\n  try {\n    classification = JSON.parse(raw);\n  } catch (e) {\n    out.push(item);\n    continue;\n  }\n\n  const primarySlug = classification.primary_category_slug;\n  const additionalSlugs = classification.additional_category_slugs || [];\n  const tagSlugs = classification.tag_slugs || [];\n\n  // ✅ Enforce single author ALWAYS\n  const authorId = SINGLE_AUTHOR_ID;\n\n  // Build category IDs array\n  const categoryIds = [];\n\n  if (primarySlug && categoryMap[primarySlug]) {\n    const id = categoryMap[primarySlug];\n    if (id && !categoryIds.includes(id)) categoryIds.push(id);\n  }\n\n  for (const slug of additionalSlugs) {\n    const id = categoryMap[slug];\n    if (id && !categoryIds.includes(id)) categoryIds.push(id);\n  }\n\n  // Build tag IDs array\n  const tagIds = [];\n  for (const slug of tagSlugs) {\n    const id = tagMap[slug];\n    if (id && !tagIds.includes(id)) tagIds.push(id);\n  }\n\n  out.push({\n    json: {\n      ...item.json,\n      wp_categories: categoryIds,\n      wp_tags: tagIds,\n      author_id: authorId,\n    },\n  });\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3264,
+        96
+      ],
+      "id": "74128c78-006a-4b67-a7f9-9cee3b2fe722",
+      "name": "Build WP Taxonomy IDs + Author Mapping"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        32,
+        -16
+      ],
+      "id": "6f2ae4f0-fe72-4f15-a38f-6a28e3ed52e4",
+      "name": "Manual Run Trigger — Debug Only"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "model": "gpt-image-1",
+        "prompt": "=You are a professional, realism-focused image generator creating photography-style images for a modern property management blog.\n\nYour task is to generate varied, relevant scenes that visually support the specific blog section provided. Images should feel authentic, human, and practical—like they were shot for a real Texas property management company, not a stock photo graveyard.\n\nVisual Style & Quality\n\nUltra-realistic, high-resolution photography\n\nNatural daylight or soft, neutral indoor lighting\n\nClean, modern Texas-style rental properties\n\nSingle-family homes\n\nDuplexes\n\nSmall multifamily buildings\n\nProfessional composition with a warm, approachable feel\n\nReal-world imperfections allowed (but no messes or chaos)\n\nThink: “competent, calm, and human—not staged or cheesy.”\n\nAllowed Subjects (Rotate for Variety)\n\nPeople (optional, but realistic when included):\n\nProperty managers\n\nTenants\n\nOwners\n\nMaintenance technicians\n\nScenes may include (do not repeat patterns):\n\nMove-in or move-out walkthroughs\n\nFriendly, professional tenant conversations\n\nMaintenance evaluations or light repair moments\n\nProperty manager reviewing paperwork with an owner\n\nOffice-based rent processing or customer service scenes\n\nInterior shots of clean, rental-ready homes\n\nExterior curb-appeal shots of rental properties\n\nTenants touring a unit\n\nEach image should feel distinct. No “same shot, different shirt” nonsense.\n\nRestricted Elements (Use Only If Explicitly Mentioned)\n\nDo NOT include the following unless the blog section clearly references them:\n\nLockboxes\n\nKey handoffs\n\nDoor notices\n\nPosted signage\n\n“For rent” or “For sale” signs\n\nRepeated props or visual clichés\n\nIf it’s not in the article, it doesn’t magically appear.\n\nMood & Tone\n\nProfessional and confident\n\nCalm, organized, and capable\n\nWarm and human\n\nLightly relatable when appropriate (subtle stress is fine—goofy is not)\n\nNo sitcom energy. This is grown-up business.\n\nComposition Rules\n\nSingle, clear focal point\n\nNo text, captions, labels, or signage in the image\n\nMinimal clutter\n\nNo visible branding or logos\n\nAvoid dramatic angles or gimmicky perspectives\n\nThe image should support the content, not scream for attention.\n\nFinal Instruction\n\nGenerate one realistic image that visually supports the following section of the blog post:\n\n{{ $json[\"message.content.blog_post_images\"] }}",
+        "options": {
+          "size": "1024x1024"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        640,
+        784
+      ],
+      "id": "c24f8b3a-6c43-4292-9613-d7981a3c4cfd",
+      "name": "AI Featured Image Generator",
+      "credentials": {
+        "openAiApi": {
+          "id": "Navm9hDUnjwpRcbB",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You generate cinematic, photography-ready image prompts that visually support a Blaze Real Estate blog post. Your goal is to provide visual variety across the post by utilizing different scales, from wide architectural shots to intimate details.\n\nYour job is to create exactly 3 unique image prompts for the entire blog post provided.\n\nCore Rule (Critical):\nEvery prompt you generate must describe a scene that could plausibly be photographed in the real world. Provide exactly 3 prompts total. Ensure each of the three prompts uses a different camera distance (e.g., one wide/environmental, one medium/interior, one close-up/detail).\n\nConcepts like systems, automation, and efficiency should be shown through:\n\nEnvironments and Architecture\n\nModern Textures (Limestone, white oak, glass, steel)\n\nIntegrated Technology\n\nSpatial Organization and Symmetry\n\nLighting and Composition\n—not pure abstraction or repetitive office setups.\n\nStyle Direction:\n\nClean, modern, professional photography\n\nCinematic lighting (soft daylight, controlled indoor light, or Texas golden hour)\n\nMinimalist, intentional composition\n\nCalm, high-competence atmosphere\n\nModern Texas property management context (think Austin/Dallas/Houston high-end residential)\n\nNo gritty realism. No stylized illustration. No surreal visuals.\n\nConceptual → Photographic Translation Guide:\nUse diverse visual metaphors grounded in reality:\n\nA wide-angle exterior of a modern Texas limestone property, emphasizing symmetrical landscaping and clear blue sky.\n\nA close-up of a sleek, integrated smart-home interface or minimalist thermostat set against a textured designer wall.\n\nA sun-drenched, empty modern entryway with an organized console table (keys, a small succulent, a leather tray) implying a ready-for-move-in state.\n\nA view through a floor-to-ceiling window showing a manicured residential street, emphasizing peace and oversight.\n\nAn architectural detail shot of a modern staircase or hallway showing clean lines and repetitive patterns to represent \"systems.\"\n\nIf it can’t be photographed, don’t describe it.\n\nPeople Usage:\n\nPrefer no people.\n\nIf included, they must be: Natural, secondary to the environment, and captured in soft focus or from a distance.\n\nAbsolute Avoid List:\nNever include: Desktops with laptops (unless absolutely necessary for the specific topic), lockboxes, posted notices, “For rent” or “For sale” signs, literal paperwork, or staged stock-photo scenes.\n\nOutput Rules:\n\nReturn exactly 3 image prompts total.\n\nEach prompt is a single paragraph.\n\nNo commentary.\n\nNo markdown.\n\nNo numbering.",
+              "role": "system"
+            },
+            {
+              "content": "={{ $('Parse AI JSON — Extract Post Content').item.json.blog_post }}"
+            },
+            {
+              "content": "==Please output exactly 3 prompts in JSON format with the following structure:\n{\n  \"blog_post_images\": [\n    \"prompt 1\",\n    \"prompt 2\",\n    \"prompt 3\"\n  ]\n}",
+              "role": "assistant"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        64,
+        784
+      ],
+      "id": "a459c251-1d7b-4d33-9c5c-c9f1ce1271eb",
+      "name": "Build Image Prompts from SEO Topics",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "openAiApi": {
+          "id": "Navm9hDUnjwpRcbB",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate alt text for this image:\n{{ $('Split Image Prompts into Individual Items').item.json['message.content.blog_post_images'] }}\n\nArticle topic: {{ $('AI SEO Title Optimization Pass').item.json.seo_title }}\n\n",
+        "options": {
+          "systemMessage": "You generate clean, SEO-optimized alt descriptions for blog images.\nWrite 1 alt text sentence per input prompt.\n\nRules:\n- 100–140 characters.\n- Human and natural — NOT keyword stuffing.\n- Describe what someone sees (not conceptual).\n- Include 1 relevant keyword from the article title when possible.\n- No ending periods.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1296,
+        784
+      ],
+      "id": "5dcc48b4-4080-432b-83b9-1f0101fa8265",
+      "name": "AI Image ALT Text Writer"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1264,
+        992
+      ],
+      "id": "0bd327d4-6b88-4b1e-af98-67c2e94619ac",
+      "name": "AI Secondary Content Enhancer (rewrite pass)",
+      "credentials": {
+        "openAiApi": {
+          "id": "Navm9hDUnjwpRcbB",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "message.content.blog_post_images",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        416,
+        784
+      ],
+      "id": "3894100b-25e2-4f1e-a246-fe4773e5f400",
+      "name": "Split Image Prompts into Individual Items"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "table": {
+          "__rl": true,
+          "value": "blog_posts",
+          "mode": "list",
+          "cachedResultName": "blog_posts"
+        },
+        "dataMode": "defineBelow",
+        "columnToMatchOn": "id",
+        "valueToMatchOn": "={{ $json.id }}",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "topic_cluster",
+              "value": "={{ $json.topic_cluster }}"
+            },
+            {
+              "column": "idea_title",
+              "value": "={{ $json.idea_title }}"
+            },
+            {
+              "column": "working_title",
+              "value": "={{ $json.working_title }}"
+            },
+            {
+              "column": "slug",
+              "value": "={{ $json.slug }}"
+            },
+            {
+              "column": "persona",
+              "value": "={{ $json.persona }}"
+            },
+            {
+              "column": "cornerstone",
+              "value": "={{ $json.cornerstone }}"
+            },
+            {
+              "column": "focus_keyword",
+              "value": "={{ $json.focus_keyword }}"
+            },
+            {
+              "column": "additional_keywords",
+              "value": "={{ $json.additional_keywords }}"
+            },
+            {
+              "column": "status",
+              "value": "={{ $json.status }}"
+            },
+            {
+              "column": "content_html",
+              "value": "={{ $json.content_html }}"
+            },
+            {
+              "column": "excerpt",
+              "value": "={{ $json.excerpt }}"
+            },
+            {
+              "column": "seo_title",
+              "value": "={{ $json.seo_title }}"
+            },
+            {
+              "column": "seo_meta_description",
+              "value": "={{ $json.seo_meta_description }}"
+            },
+            {
+              "column": "seo_cornerstone",
+              "value": "={{ $json.seo_cornerstone }}"
+            },
+            {
+              "column": "wp_post_id",
+              "value": "={{ $json.wp_post_id }}"
+            },
+            {
+              "column": "wp_slug",
+              "value": "={{ $json.wp_slug }}"
+            },
+            {
+              "column": "wp_url",
+              "value": "={{ $json.wp_url }}"
+            },
+            {
+              "column": "wp_status",
+              "value": "={{ $json.wp_status }}"
+            },
+            {
+              "column": "wp_primary_category_id",
+              "value": "={{ $json.wp_primary_category_id }}"
+            },
+            {
+              "column": "wp_category_ids",
+              "value": "={{ $json.wp_category_ids }}"
+            },
+            {
+              "column": "wp_tag_ids",
+              "value": "={{ $json.wp_tag_ids }}"
+            },
+            {
+              "column": "wp_author_id",
+              "value": "={{ $json.wp_author_id }}"
+            },
+            {
+              "column": "image_prompt_primary",
+              "value": "={{ $('Build Image Prompts from SEO Topics')\n    .first()\n    .json\n    .message\n    .content\n    .blog_post_images[0]\n}}\n\n"
+            },
+            {
+              "column": "image_prompt_secondary",
+              "value": "={{ $('Build Image Prompts from SEO Topics')\n    .first()\n    .json\n    .message\n    .content\n    .blog_post_images[1]\n}}"
+            },
+            {
+              "column": "image_primary_url",
+              "value": "={{ $json.image_primary_url }}"
+            },
+            {
+              "column": "image_secondary_url",
+              "value": "={{ $json.image_secondary_url }}"
+            },
+            {
+              "column": "image_tertiary_url",
+              "value": "={{ $json.image_tertiary_url }}"
+            },
+            {
+              "column": "image_primary_guid",
+              "value": "={{ $json.image_primary_guid }}"
+            },
+            {
+              "column": "image_secondary_guid",
+              "value": "={{ $json.image_secondary_guid }}"
+            },
+            {
+              "column": "image_tertiary_guid",
+              "value": "={{ $json.image_tertiary_guid }}"
+            },
+            {
+              "column": "image_primary_alt",
+              "value": "={{ $json.image_primary_alt }}"
+            },
+            {
+              "column": "image_secondary_alt",
+              "value": "={{ $json.image_secondary_alt }}"
+            },
+            {
+              "column": "social_x_caption",
+              "value": "={{ $json.social_x_caption }}"
+            },
+            {
+              "column": "social_facebook_caption",
+              "value": "={{ $json.social_facebook_caption }}"
+            },
+            {
+              "column": "social_linkedin_caption",
+              "value": "={{ $json.social_linkedin_caption }}"
+            },
+            {
+              "column": "last_workflow_name",
+              "value": "={{ $json.last_workflow_name }}"
+            },
+            {
+              "column": "last_workflow_run_id",
+              "value": "={{ $json.last_workflow_run_id }}"
+            },
+            {
+              "column": "last_ai_model",
+              "value": "={{ $json.last_ai_model }}"
+            },
+            {
+              "column": "last_prompt_version",
+              "value": "={{ $json.last_prompt_version }}"
+            },
+            {
+              "column": "generated_at",
+              "value": "={{ DateTime.now() }}"
+            },
+            {
+              "column": "content_markdown",
+              "value": "={{ $json.content_markdown }}"
+            },
+            {
+              "column": "seo_focus_keyword",
+              "value": "={{ $json.seo_focus_keyword }}"
+            },
+            {
+              "column": "seo_additional_keywords",
+              "value": "={{ $json.seo_additional_keywords }}"
+            },
+            {
+              "column": "wp_primary_category_slug",
+              "value": "={{ $json.wp_primary_category_slug }}"
+            },
+            {
+              "column": "wp_additional_category_slugs",
+              "value": "={{ $json.wp_additional_category_slugs }}"
+            },
+            {
+              "column": "wp_tag_slugs",
+              "value": "={{ $json.wp_tag_slugs }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        1520,
+        1136
+      ],
+      "id": "1b09d189-470a-4da2-9c85-3e0dff0e1bae",
+      "name": "DB Update — Associate WP Media IDs",
+      "credentials": {
+        "mySql": {
+          "id": "a3LZuEERCY9MEIMg",
+          "name": "Blaze Marketing Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function extractFirstJsonObject(text) {\n  const s = String(text || '')\n    .replace(/```json/gi, '')\n    .replace(/```/g, '')\n    .trim();\n\n  const start = s.indexOf('{');\n  if (start === -1) {\n    throw new Error('No JSON object start found in AI output');\n  }\n\n  let depth = 0;\n  let inString = false;\n  let escaped = false;\n\n  for (let i = start; i < s.length; i++) {\n    const ch = s[i];\n\n    if (inString) {\n      if (escaped) {\n        escaped = false;\n      } else if (ch === '\\\\') {\n        escaped = true;\n      } else if (ch === '\"') {\n        inString = false;\n      }\n      continue;\n    }\n\n    if (ch === '\"') {\n      inString = true;\n      continue;\n    }\n\n    if (ch === '{') depth++;\n    if (ch === '}') depth--;\n\n    if (depth === 0) {\n      return {\n        jsonText: s.slice(start, i + 1),\n        trailingText: s.slice(i + 1).trim(),\n        cleanedText: s,\n      };\n    }\n  }\n\n  throw new Error('Could not find a complete JSON object in AI output');\n}\n\nreturn items.map(item => {\n  const raw = item.json.output ?? item.json.text ?? item.json.response ?? '';\n  const extracted = extractFirstJsonObject(raw);\n  const parsed = JSON.parse(extracted.jsonText);\n\n  return {\n    json: {\n      ...parsed,\n      _debug_trailing_text: extracted.trailingText || null,\n    },\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2496,
+        96
+      ],
+      "id": "bb019abe-0925-4b7e-a887-d0f368198f1a",
+      "name": "Parse AI JSON — Extract Post Content"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const item = $input.item;\n\n// Topic → slug\nconst topic = item.json.article_topic || item.json.topic || 'image';\nconst slug = topic\n  .toLowerCase()\n  .replace(/[^a-z0-9]+/g, '-')   // non-alphanumerics → -\n  .replace(/(^-|-$)/g, '');      // trim - from edges\n\nconst timestamp = new Date().toISOString().replace(/[-:.TZ]/g, '');\nconst imageFileName = `blaze-img-${slug}-${timestamp}.png`;\n\n// Copy binary and update metadata\nconst binary = item.binary || {};\nif (binary.data) {\n  binary.data.fileName = imageFileName;\n  binary.data.mimeType = 'image/png';\n}\n\nreturn {\n  json: {\n    ...item.json,\n    imageFileName,\n  },\n  binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        784
+      ],
+      "id": "5f453756-9249-4048-906a-09cc0b2de8de",
+      "name": "Generate Unique Image Filenames (slug-based)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://blazeproperty.com/wp-json/wp/v2/media",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Disposition",
+              "value": "={{ 'attachment; filename=' + $json[\"imageFileName\"] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1072,
+        784
+      ],
+      "id": "ffcaefbf-6e7d-4091-b432-b8e12bb40571",
+      "name": "Upload Images to WordPress Media Library",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "wordpressApi": {
+          "id": "vP3mdg084tWAWqK7",
+          "name": "Wordpress account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://blazeproperty.com/wp-json/wp/v2/media/{{ $node[\"Upload Images to WordPress Media Library\"].json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "alt_text",
+              "value": "={{ $node[\"AI Image ALT Text Writer\"].json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        64,
+        1136
+      ],
+      "id": "30f9a9d8-0bdb-4c47-879e-659c3a7bf6be",
+      "name": "Update ALT + Meta for Uploaded Media",
+      "credentials": {
+        "wordpressApi": {
+          "id": "vP3mdg084tWAWqK7",
+          "name": "Wordpress account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Collect all WordPress media responses and pair them with alt text\n\n// Media responses (this node's input – 3 items)\nconst mediaItems = $input.all();\n\n// Alt text items from Image ALT Builder\nconst altItems = $items(\"AI Image ALT Text Writer\", \"main\", 0, 0) || [];\n\nconst images = mediaItems.map((mediaItem, index) => {\n  const img = mediaItem.json || {};\n  const altItem = altItems[index];\n  const alt =\n    (altItem && altItem.json && altItem.json.output) ||\n    img.alt_text ||\n    \"\";\n\n  return {\n    id: img.id,\n    source_url: img.source_url,\n    guid: img.guid?.rendered || null,\n    alt,\n  };\n});\n\nreturn [\n  {\n    json: {\n      images,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        1136
+      ],
+      "id": "17c2e2cd-d745-4893-9dea-ec0239424765",
+      "name": "Collect Published Media URLs & GUIDs"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "==You are a professional blog layout designer for Blaze Real Estate’s website.\n\nYour job is to transform a Blaze blog post into a clean, semantic HTML FRAGMENT that will be styled by an existing Elementor post template.\n\nYou will be given:\n- The blog title (for context only)\n- The full blog post content (in Blaze voice)\n- A list of image captions\n- A list of image URLs\n- Persona and topic/cluster context from earlier steps (via the text content itself)\n\nYou must:\n\nCRITICAL OUTPUT RULES (DO NOT VIOLATE)\n- Output an HTML FRAGMENT only.\n- Do NOT include <!DOCTYPE html>, <html>, <head>, or <body>.\n- Do NOT include any <style> tags.\n- Do NOT use any inline style attributes (no style=\"...\").\n- Do NOT set fonts, colors, margins, or layout. Elementor handles all styling.\n- Do NOT output the blog title as <h1>. The template already renders the title.\n\nSTRUCTURE RULES\n- Treat the input blog post as the source of truth for wording and order.\n- Break content into logical sections with:\n  - <h2> for main sections\n  - <h3> for subsections\n- Use <p> for paragraphs.\n- Use <ul> / <ol> only when necessary for clarity (checklists, clear steps).\n- Use <strong> and <em> for emphasis where it improves readability.\n- Do NOT invent new content. You may only:\n  - Split/merge paragraphs for clarity\n  - Convert obvious headings in the text to <h2>/<h3>\n  - Lightly smooth transitions if needed, without changing meaning.\n\nIMAGE PLACEMENT RULES\nYou will receive:\n- A list of image captions (comma-separated or clearly grouped)\n- A list of image URLs\n\nAssume captions and URLs follow the same order.\n\nFor each image, generate:\n<figure>\n  <img src=\"IMAGE_URL\" alt=\"SHORT_ALT_TEXT\" />\n</figure>\n\nRules:\n- Do NOT add width, height, or any other attributes beyond src and alt.\n- Do NOT include inline styles.\n\nPlacement logic:\n- Treat the FIRST image as the primary/hero image.\n  - Place its <figure> near the top of the article, AFTER the opening hook / first 1–2 paragraphs, not before any text.\n- Place additional images:\n  - Near sections where the caption conceptually fits.\n  - Prefer placing them between logical sections (after a paragraph that matches the visual idea).\n  - Do NOT stack multiple images back-to-back unless the article clearly calls for it.\n- If there are more URLs than captions, omit <figcaption> for unmatched images.\n- If there are more captions than URLs, ignore the extra captions.\n\nLEAD-GENERATION FORM SHORTCODES\nYou may insert Blaze lead-generation forms in contextually appropriate places using these shortcodes (exact strings). These are based on Blaze’s route structure:\n\n- For property management / landlord / owner-focused articles:\n  - Property management owner lead form:\n    [pm_owner_short]\n\n- For investor-focused content (owning rentals, investing in the Panhandle, portfolio help, etc.):\n  - Investor lead form:\n    [investor_short]\n\n- For real estate sales content:\n  - Seller consult form:\n    [seller_short]\n  - Buyer consult form:\n    [buyer_short]\n\n- For commercial real estate content:\n  - Commercial client consult form:\n    [commercial_client_short]\n\n- For general “talk to us about your situation” or mixed/neutral content:\n  - General contact form:\n    [general_contact_short]\n\nRules for form placement:\n- Never place a form in the first 2–3 paragraphs.\n- Insert forms only where the content naturally suggests “next steps,” “get help,” “talk to a professional,” or “if this is you, here’s what to do.”\n- Maximum 2 forms per article.\n- Do NOT place two forms directly back-to-back.\n- Wrap each shortcode in its own paragraph for clarity, like:\n  <p>[pm_owner_short]</p>\n\nVOICE & CONTENT GUARDRAILS\n- Preserve Blaze voice: confident, practical, direct, slightly witty when appropriate.\n- Do NOT change the domain of the article:\n  - Property management content must stay PM-focused (owners, landlords, tenants, operations).\n  - Sales content stays sales-focused (buyers, sellers, market timing, strategy).\n  - Investor content stays investor-focused.\n  - Commercial content stays commercial-focused.\n- Do NOT add new long sections, stories, or opinions.\n- Do NOT add legal advice.\n\nFINAL OUTPUT\n- Return ONLY the HTML fragment.\n- No markdown.\n- No explanation or commentary.\n- No extra JSON, just the raw HTML fragment.\n",
+              "role": "system"
+            },
+            {
+              "content": "==Title: {{ $('Parse AI JSON — Extract Post Content').first().json.title }}\n\nPersona: {{ $('Parse AI JSON — Extract Post Content').first().json.persona }}\nTopic cluster: {{ $('Parse AI JSON — Extract Post Content').first().json.topic_cluster }}\n\nBlog post:\n{{ $('Parse AI JSON — Extract Post Content').first().json.blog_post }}\n\nImage captions (comma-separated, in order):\n{{ $('Build Image Prompts from SEO Topics').first().json.message.content.blog_post_images }}\n\nImage URLs (in order):\n{{ $('Collect Published Media URLs & GUIDs').first().json.images[0].source_url }}\n{{ $('Collect Published Media URLs & GUIDs').first().json.images[1].source_url }}\n{{ $('Collect Published Media URLs & GUIDs').first().json.images[2].source_url }}\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        512,
+        1136
+      ],
+      "id": "ce7a4ad1-d1d4-41fa-8625-b0e33a35c144",
+      "name": "Apply Blaze Blog Layout + Rich Styling",
+      "credentials": {
+        "openAiApi": {
+          "id": "Navm9hDUnjwpRcbB",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseObject(val) {\n  if (!val) return {};\n  if (typeof val === 'string') {\n    try { return JSON.parse(val); } catch (e) { return {}; }\n  }\n  return val;\n}\n\nfunction parseArray(val) {\n  if (!val) return [];\n  if (typeof val === 'string') {\n    try {\n      const parsed = JSON.parse(val);\n      return Array.isArray(parsed) ? parsed : [];\n    } catch (e) {\n      return [];\n    }\n  }\n  return Array.isArray(val) ? val : [];\n}\n\nfunction toCSV(val) {\n  if (!val) return null;\n  if (Array.isArray(val)) return val.join(',');\n  if (typeof val === 'string') return val;\n  return null;\n}\n\n// ----- INPUT OBJECTS -----\nconst seo      = parseObject($json.seo);\nconst catsTags = parseObject($json.catsTags);\nconst wpPost   = parseObject($json.wpPost);\nconst images   = parseArray($json.images);\nconst prompts  = parseArray($json.prompts);\n\n// Nested slugs live inside catsTags.output as a JSON string\nconst catsTagsOutput = parseObject(catsTags.output);\n\nconst img1 = images[0] || {};\nconst img2 = images[1] || {};\nconst img3 = images[2] || {};\n\nconst image_prompt_primary   = prompts[0] || null;\nconst image_prompt_secondary = prompts[1] || null;\nconst image_prompt_tertiary  = prompts[2] || null;\n\n// ----- ID / KEY -----\nconst mysqlIdRaw = $json.mysql_id;\n\nconst id = (mysqlIdRaw !== undefined && mysqlIdRaw !== null)\n  ? Number(mysqlIdRaw)\n  : null;\n\nif (!id || Number.isNaN(id)) {\n  throw new Error(\n    `Create mysql payload: missing or invalid mysql_id from Collect Post Data. Got: ${mysqlIdRaw}`\n  );\n}\n\n// ----- CONTENT -----\nconst content_html =\n  $json.content_html ||              // from Collect Post Data\n  seo.blog_post ||                   // fallback\n  \"\";\n\n// Main markdown body for SQL\nconst content_markdown =\n  seo.blog_post ||                   // your original MD\n  $json.content_markdown ||          // future-proof\n  \"\";\n\n// Excerpt\nconst excerpt =\n  seo.excerpt ||\n  (wpPost.excerpt && (wpPost.excerpt.raw || wpPost.excerpt.rendered)) ||\n  \"\";\n\n// ----- SEO -----\nconst seo_title            = seo.seo_title || seo.title || \"\";\nconst seo_meta_description = seo.seo_meta_description || \"\";\nconst seo_focus_keyword    = seo.seo_focus_keyword || \"\";\n\n// normalize additional keywords to a single string\nlet seo_additional_keywords = \"\";\nif (Array.isArray(seo.seo_additional_keywords)) {\n  seo_additional_keywords = seo.seo_additional_keywords.join(\", \");\n} else if (typeof seo.seo_additional_keywords === \"string\") {\n  seo_additional_keywords = seo.seo_additional_keywords;\n} else {\n  seo_additional_keywords = \"\";\n}\n\n// keep it numeric-ish for DB\nconst seo_cornerstone = seo.seo_cornerstone ? 1 : 0;\n\n// ----- WP CORE / TAXONOMY -----\nconst wp_post_id = wpPost.id || null;\nconst wp_slug    = wpPost.slug || seo.slug || \"\";\nconst wp_url     = wpPost.link || null;\nconst wp_status  = wpPost.status || \"draft\";\n\nconst wp_category_ids = toCSV(catsTags.wp_categories) || null;\nconst wp_tag_ids      = toCSV(catsTags.wp_tags) || null;\n\nconst wp_primary_category_id =\n  (catsTags.wp_categories && catsTags.wp_categories[0]) || null;\n\nconst wp_author_id = wpPost.author || catsTags.author_id || null;\n\n// ----- SLUG FIELDS (from catsTags.output) -----\nconst wp_primary_category_slug =\n  catsTagsOutput.primary_category_slug || null;\n\nconst wp_additional_category_slugs =\n  toCSV(catsTagsOutput.additional_category_slugs) || null;\n\nconst wp_tag_slugs =\n  toCSV(catsTagsOutput.tag_slugs) || null;\n\n// ----- IMAGES -----\nconst image_primary_url   = img1.source_url || null;\nconst image_secondary_url = img2.source_url || null;\nconst image_tertiary_url  = img3.source_url || null;\n\nconst image_primary_guid   = img1.guid || \"\";\nconst image_secondary_guid = img2.guid || \"\";\nconst image_tertiary_guid  = img3.guid || \"\";\n\nconst image_primary_alt   = img1.alt || null;\nconst image_secondary_alt = img2.alt || null;\n\n// ----- INTERNAL STATUS -----\nconst status = \"draft_created\";\n\n// ----- SOCIAL CAPTIONS -----\nconst social_x_caption        = seo.twitter_caption || null;\nconst social_facebook_caption = seo.facebook_caption || null;\nconst social_linkedin_caption = seo.linkedin_caption || null;\n\n// ----- WORKFLOW META -----\nconst last_workflow_name   = \"Blaze Content Engine v1\";\nconst last_workflow_run_id = $execution.id || null;\nconst last_ai_model        = \"gpt-4.1-mini\";\nconst last_prompt_version  = \"v1\";\n\n// ----- FINAL ROW -----\nconst row = {\n  id,\n\n  // planning/meta\n  topic_cluster: seo.topic_cluster || null,\n  idea_title: seo.idea_title || seo.title || null,\n  working_title: seo.title || null,\n  slug: seo.slug || wp_slug || null,\n  category_planned: seo.category_planned || null,\n  persona: seo.persona || null,\n  cornerstone: seo_cornerstone, // keep aligned with seo_cornerstone\n\n  // legacy fields if present in schema\n  focus_keyword: seo_focus_keyword || null,\n  additional_keywords: seo_additional_keywords || null,\n\n  // status + content\n  status,\n  content_html,\n  content_markdown,\n  excerpt,\n\n  // SEO\n  seo_title,\n  seo_meta_description,\n  seo_focus_keyword,\n  seo_additional_keywords,\n  seo_cornerstone,\n\n  // WP core\n  wp_post_id,\n  wp_slug,\n  wp_url,\n  wp_status,\n\n  // WP IDs\n  wp_primary_category_id,\n  wp_category_ids,\n  wp_tag_ids,\n\n  // WP slugs (the ones you care about)\n  wp_primary_category_slug,\n  wp_additional_category_slugs,\n  wp_tag_slugs,\n\n  // author\n  wp_author_id,\n\n  // image prompts\n  image_prompt_primary,\n  image_prompt_secondary,\n  // image_prompt_tertiary if you add that column later\n\n  // image URLs / GUID / ALT\n  image_primary_url,\n  image_secondary_url,\n  image_tertiary_url,\n  image_primary_guid,\n  image_secondary_guid,\n  image_tertiary_guid,\n  image_primary_alt,\n  image_secondary_alt,\n\n  // social\n  social_x_caption,\n  social_facebook_caption,\n  social_linkedin_caption,\n\n  // workflow trace\n  last_workflow_name,\n  last_workflow_run_id,\n  last_ai_model,\n  last_prompt_version,\n};\n\nreturn [{ json: row }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1296,
+        1136
+      ],
+      "id": "b11cfd4e-c958-4550-ab90-55334a5e34eb",
+      "name": "Build SQL Insert Payload from WP + SEO"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://blazeproperty.com/wp-json/wp/v2/posts",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => {\n\n  const seoRaw = $item(0).$node[\"Parse AI JSON — Extract Post Content\"].json || {};\n  const seoOpt = $item(0).$node[\"AI SEO Title Optimization Pass\"].json || {};\n  const cats   = $item(0).$node[\"Build WP Taxonomy IDs + Author Mapping\"].json || {};\n  const design = $item(0).$node[\"Apply Blaze Blog Layout + Rich Styling\"].json || {};\n  const media  = $item(0).$node[\"Collect Published Media URLs & GUIDs\"].json || {};\n  const images = media.images || [];\n\n  const seo = {\n    ...seoRaw,\n    ...(seoOpt.seo || {}),\n  };\n\n  const h1Title =\n    seo.h1_title ||\n    seoRaw.title ||\n    seoOpt.h1_title ||\n    seoOpt.title ||\n    seoOpt.seo_title ||\n    seo.seo_title ||\n    seo.title ||\n    \"Untitled\";\n\n  const metaTitle =\n    seoOpt.seo_title ||\n    seo.seo_title ||\n    seoOpt.title ||\n    seo.title ||\n    h1Title;\n\n  const contentHtml =\n    design.message?.content ||\n    design.html ||\n    seo.blog_post ||\n    \"\";\n\n  const featuredId = (images[0] && images[0].id) || 0;\n\n  // --- keywords for AIOSEO ---\n  const focusRaw =\n    seoOpt.seo_focus_keyword ||\n    seo.seo_focus_keyword ||\n    \"\";\n\n  const additionalRaw =\n    seoOpt.seo_additional_keywords ||\n    seo.seo_additional_keywords ||\n    [];\n\n  const additionalStrings = Array.isArray(additionalRaw)\n    ? additionalRaw\n    : (typeof additionalRaw === \"string\" && additionalRaw.trim()\n        ? additionalRaw.split(\",\").map(s => s.trim())\n        : []);\n\n  const additionalKeyphrases = additionalStrings\n    .map(s => String(s || \"\").trim())\n    .filter(Boolean)\n    .slice(0, 10)\n    .map(keyphrase => ({ keyphrase }));\n\n  const aioseo_meta_data = {\n    title: metaTitle,\n    description: seo.seo_meta_description || \"\",\n    keyphrases: {\n      focus: { keyphrase: String(focusRaw || \"\").trim() },\n      additional: additionalKeyphrases,\n    },\n  };\n\n  // --- your internal meta (optional, keep) ---\n  const meta = {\n    _blaze_seo_title:          metaTitle,\n    _blaze_seo_description:    seo.seo_meta_description || \"\",\n    _blaze_seo_focus_keyword:  String(focusRaw || \"\").trim(),\n    _blaze_seo_extra_keywords: additionalStrings.join(\", \"),\n  };\n\n  const body = {\n    title:          h1Title,\n    slug:           seo.slug || \"\",\n    content:        String(contentHtml || \"\"),\n    excerpt:        seo.excerpt || \"\",\n    status:         \"publish\",\n    author:         cats.author_id || 5,\n    categories:     cats.wp_categories || [],\n    tags:           cats.wp_tags || [],\n    featured_media: featuredId,\n    meta,\n    aioseo_meta_data,\n  };\n\n  // IMPORTANT: HttpRequest JSON body expects a JSON STRING it can parse\n  return JSON.stringify(body);\n\n})() }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        832,
+        1136
+      ],
+      "id": "822d2f1a-2342-4c5b-a76d-31c21d10c192",
+      "name": "Create WordPress Post via REST",
+      "credentials": {
+        "wordpressApi": {
+          "id": "vP3mdg084tWAWqK7",
+          "name": "Wordpress account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b44e3bc8-f9bb-47e8-a3f6-60813e470b29",
+              "name": "seo",
+              "value": "={{ JSON.stringify($('Parse AI JSON — Extract Post Content').first().json) }}\n",
+              "type": "string"
+            },
+            {
+              "id": "41440d32-27de-4aa1-9c41-2dfa282d0f07",
+              "name": "catsTags",
+              "value": "={{ JSON.stringify($('Build WP Taxonomy IDs + Author Mapping').first().json) }}\n",
+              "type": "string"
+            },
+            {
+              "id": "d6dd7aff-1bdf-4a24-bd0d-5456ebec9914",
+              "name": "wpPost",
+              "value": "={{ JSON.stringify($('Create WordPress Post via REST').first().json) }}\n",
+              "type": "string"
+            },
+            {
+              "id": "a6d4cb67-a2da-4425-b982-950890b4ac1b",
+              "name": "images",
+              "value": "={{ JSON.stringify($('Collect Published Media URLs & GUIDs').first().json.images) }}\n",
+              "type": "string"
+            },
+            {
+              "id": "15d81c50-795d-4928-9c3d-2720cea0c6e1",
+              "name": "prompts",
+              "value": "={{ JSON.stringify(\n  $('Build Image Prompts from SEO Topics')\n    .first()\n    .json\n    .message\n    .content\n    .blog_post_images ?? []\n) }}\n\n",
+              "type": "string"
+            },
+            {
+              "id": "a513a12c-2d04-4768-98c4-8cda740375a9",
+              "name": "content_html",
+              "value": "={{ $('Apply Blaze Blog Layout + Rich Styling').first().json.message?.content || $('Parse AI JSON — Extract Post Content').first().json.blog_post }}\n",
+              "type": "string"
+            },
+            {
+              "id": "69a31d2e-0465-4c20-9156-a0de1150851e",
+              "name": "blog_id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            },
+            {
+              "id": "17b1e499-4103-4a7e-8e31-ed6031066b90",
+              "name": "mysql_id",
+              "value": "={{ $('DB Insert — Save Article Record').first().json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "4ef13bb1-f44f-4815-a825-4b2ede896e2b",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1072,
+        1136
+      ],
+      "id": "44663465-5f6e-43c2-8d1e-f1ae54b89492",
+      "name": "Merge Content + Metadata Before DB Write"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM blog_posts\nWHERE id = {{ $('Build AI Prompt for Article Generation').item.json.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        1024,
+        96
+      ],
+      "id": "6833dc28-9671-44fc-b257-56aa6790dc68",
+      "name": "DB Insert — Save Article Record",
+      "credentials": {
+        "mySql": {
+          "id": "a3LZuEERCY9MEIMg",
+          "name": "Blaze Marketing Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 11 * * 1,3,5"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        32,
+        144
+      ],
+      "id": "55410868-7eb6-4766-8bcf-1575feb87908",
+      "name": "CRON — Automatic Article Generation Schedule"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Punchy + marketing-forward title optimizer for Blaze + AIOSEO\n\nfunction parseObject(val) {\n  if (!val) return {};\n  if (typeof val === 'string') {\n    try { return JSON.parse(val); } catch (e) { return {}; }\n  }\n  return val;\n}\n\nfunction capFirst(str) {\n  if (!str) return '';\n  return str.charAt(0).toUpperCase() + str.slice(1);\n}\n\nfunction titleCase(str) {\n  if (!str) return '';\n  return str\n    .split(' ')\n    .filter(Boolean)\n    .map(w => w[0].toUpperCase() + w.slice(1))\n    .join(' ');\n}\n\nfunction getAudienceFromPersona(personaRaw) {\n  const persona = (personaRaw || '').toLowerCase();\n\n  if (persona.includes('seller')) return 'Sellers';\n  if (persona.includes('owner')) return 'Owners';\n  if (persona.includes('landlord')) return 'Owners';\n  if (persona.includes('investor')) return 'Investors';\n  if (persona.includes('buyer')) return 'Buyers';\n  if (persona.includes('tenant') || persona.includes('renter')) return 'Renters';\n\n  return 'Homeowners';\n}\n\nfunction ensureTexasInKeyword(keyword) {\n  if (!keyword) return '';\n  const lower = keyword.toLowerCase();\n  if (lower.includes('texas')) return keyword;\n  // tack \"in Texas\" at the end if it's not already there\n  return keyword + ' in Texas';\n}\n\nfunction normalizeFocusKeyword(seo) {\n  // try several spots\n  return (\n    seo.seo_focus_keyword ||\n    seo.focus_keyword      ||\n    seo.focusKeyword      ||\n    ''\n  );\n}\n\nfunction buildOptions(focusKeywordRaw, audience) {\n  let fk = focusKeywordRaw.trim();\n  if (!fk) return [];\n\n  // Make sure Texas context is there\n  fk = ensureTexasInKeyword(fk);\n\n  // Ensure leading capital\n  const fkLead = capFirst(fk);\n\n  const options = [];\n\n  // Option 1 – primary, very punchy\n  options.push(`${fkLead}: What Every ${audience} MUST Know`);\n\n  // Option 2 – tension / overlooked angle\n  options.push(`${fkLead}: What Most ${audience} Overlook`);\n\n  // Option 3 – checklist framing\n  options.push(`${fkLead}: The Critical ${audience} Checklist`);\n\n  return options;\n}\n\nconst items = $input.all();\n\nreturn items.map(item => {\n  const json = item.json || {};\n\n  const seo = parseObject(json.seo);\n  const persona = seo.persona || json.persona || null;\n\n  const audience = getAudienceFromPersona(persona);\n  const focusKeywordRaw = normalizeFocusKeyword(seo);\n\n  let options = buildOptions(focusKeywordRaw, audience);\n\n  // Fallbacks if something is weird\n  if (!options.length) {\n    const base =\n      seo.title ||\n      seo.seo_title ||\n      json.title ||\n      'Real Estate Tips for the Texas Panhandle';\n\n    const cleanBase = base.replace(/\\s*\\|\\s*Blaze Real Estate.*/i, '').trim();\n\n    options = [\n      `${cleanBase}: What Every ${audience} MUST Know`,\n      `${cleanBase}: The Critical ${audience} Guide`,\n      `${cleanBase}: Proven Tips for ${audience}`\n    ];\n  }\n\n  const primaryTitle = options[0];\n  const altTitle1    = options[1] || null;\n  const altTitle2    = options[2] || null;\n\n  // Update seo object so downstream nodes (and SQL) see the new title\n  seo.seo_title = primaryTitle;\n\n  return {\n    json: {\n      ...json,\n      // keep seo as JSON string if that's how your next Set node expects it\n      seo,\n      title: primaryTitle,        // <- use this in your WP Create Post node\n      seo_title: primaryTitle,    // <- for AIOSEO/SQL if needed\n      alt_title_1: altTitle1,\n      alt_title_2: altTitle2\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2736,
+        96
+      ],
+      "id": "faf7290f-f78b-41c4-b14e-fc3161624fd2",
+      "name": "AI SEO Title Optimization Pass"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE blog_posts\nSET status = 'generating'\nWHERE id = {{ $json.id }} AND status = 'idea';\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        752,
+        96
+      ],
+      "id": "ff38632a-f092-4cda-8022-4b10fed2f988",
+      "name": "DB Fetch — Select Next Article to Generate",
+      "credentials": {
+        "mySql": {
+          "id": "a3LZuEERCY9MEIMg",
+          "name": "Blaze Marketing Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CALL pick_next_blog_post();",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        304,
+        80
+      ],
+      "id": "a0578208-8879-4a67-87aa-3f6eab45ea4c",
+      "name": "Load Next Topic from Queue",
+      "credentials": {
+        "mySql": {
+          "id": "a3LZuEERCY9MEIMg",
+          "name": "Blaze Marketing Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "3lOlKyqbTgyTASI8",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/3lOlKyqbTgyTASI8"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2080,
+        1136
+      ],
+      "id": "357e49a5-09c8-4ab6-bd95-76cd200999eb",
+      "name": "Call 'WF__Notify__GoogleChat'"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "92f0c6ce-417a-484b-8fc9-98da60772c1c",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "74d67899-4841-4769-857a-34182a4825d4",
+              "name": "workflow_name",
+              "value": "={{ $workflow.name }}",
+              "type": "string"
+            },
+            {
+              "id": "97a581fd-c662-41ce-9711-1a1bc3f08ca9",
+              "name": "workflow_id",
+              "value": "={{ $workflow.id }}",
+              "type": "string"
+            },
+            {
+              "id": "1d10a085-8aa1-42af-ba3a-c84c89a673b0",
+              "name": "=execution_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "8c402a9b-0c22-4010-a597-ebc378f5b222",
+              "name": "mode",
+              "value": "={{ $execution.mode }}",
+              "type": "string"
+            },
+            {
+              "id": "ad049df6-21b3-4cf3-a723-188a0626e50d",
+              "name": "=execution_url",
+              "value": "={{ 'https://n8n.blzres.com/workflow/' + $workflow.id + '/executions/' + $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f49a3824-dba4-47d3-b0c7-916c8e1cfb98",
+              "name": "summary",
+              "value": "Complete",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1728,
+        1136
+      ],
+      "id": "ff7b6b28-4f78-4fda-9811-a79a33a5f369",
+      "name": "Build Notify Payload"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1712,
+        96
+      ],
+      "id": "4ca072b8-63ee-4369-b552-631fc11e361e",
+      "name": "Extract from File"
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Article Generator — Main Content",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build AI Prompt for Article Generation": {
+      "main": [
+        [
+          {
+            "node": "DB Fetch — Select Next Article to Generate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Article Generator — Main Content": {
+      "main": [
+        [
+          {
+            "node": "Parse AI JSON — Extract Post Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Research Assistant — Fact Checking": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Article Generator — Main Content",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Topic Classifier — Categories & Tags": {
+      "main": [
+        [
+          {
+            "node": "Build WP Taxonomy IDs + Author Mapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI SEO Metadata Generator": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Topic Classifier — Categories & Tags",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Context Builder — “Blaze Brain” Memory": {
+      "main": [
+        [
+          {
+            "node": "AI Article Generator — Main Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve Relevant Blaze Brain Snippets": {
+      "main": [
+        [
+          {
+            "node": "Retrieve Attached Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve Attached Documents": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build WP Taxonomy IDs + Author Mapping": {
+      "main": [
+        [
+          {
+            "node": "Build Image Prompts from SEO Topics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Run Trigger — Debug Only": {
+      "main": [
+        [
+          {
+            "node": "Load Next Topic from Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Featured Image Generator": {
+      "main": [
+        [
+          {
+            "node": "Generate Unique Image Filenames (slug-based)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Image Prompts from SEO Topics": {
+      "main": [
+        [
+          {
+            "node": "Split Image Prompts into Individual Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Image ALT Text Writer": {
+      "main": [
+        [
+          {
+            "node": "Update ALT + Meta for Uploaded Media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Secondary Content Enhancer (rewrite pass)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Image ALT Text Writer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Image Prompts into Individual Items": {
+      "main": [
+        [
+          {
+            "node": "AI Featured Image Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB Update — Associate WP Media IDs": {
+      "main": [
+        [
+          {
+            "node": "Build Notify Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI JSON — Extract Post Content": {
+      "main": [
+        [
+          {
+            "node": "AI SEO Title Optimization Pass",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Unique Image Filenames (slug-based)": {
+      "main": [
+        [
+          {
+            "node": "Upload Images to WordPress Media Library",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Images to WordPress Media Library": {
+      "main": [
+        [
+          {
+            "node": "AI Image ALT Text Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update ALT + Meta for Uploaded Media": {
+      "main": [
+        [
+          {
+            "node": "Collect Published Media URLs & GUIDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Published Media URLs & GUIDs": {
+      "main": [
+        [
+          {
+            "node": "Apply Blaze Blog Layout + Rich Styling",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Blaze Blog Layout + Rich Styling": {
+      "main": [
+        [
+          {
+            "node": "Create WordPress Post via REST",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build SQL Insert Payload from WP + SEO": {
+      "main": [
+        [
+          {
+            "node": "DB Update — Associate WP Media IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create WordPress Post via REST": {
+      "main": [
+        [
+          {
+            "node": "Merge Content + Metadata Before DB Write",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Content + Metadata Before DB Write": {
+      "main": [
+        [
+          {
+            "node": "Build SQL Insert Payload from WP + SEO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB Insert — Save Article Record": {
+      "main": [
+        [
+          {
+            "node": "Retrieve Relevant Blaze Brain Snippets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRON — Automatic Article Generation Schedule": {
+      "main": [
+        [
+          {
+            "node": "Load Next Topic from Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI SEO Title Optimization Pass": {
+      "main": [
+        [
+          {
+            "node": "AI Topic Classifier — Categories & Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB Fetch — Select Next Article to Generate": {
+      "main": [
+        [
+          {
+            "node": "DB Insert — Save Article Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Next Topic from Queue": {
+      "main": [
+        [
+          {
+            "node": "Build AI Prompt for Article Generation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Notify Payload": {
+      "main": [
+        [
+          {
+            "node": "Call 'WF__Notify__GoogleChat'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "AI Context Builder — “Blaze Brain” Memory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "timeSavedPerExecution": 180,
+    "availableInMCP": true,
+    "errorWorkflow": "3WJZrZsLJqgg1EIM",
+    "timeSavedMode": "fixed",
+    "binaryMode": "separate"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    },
+    "node:CRON — Generate New Blog Content": {
+      "recurrenceRules": []
+    },
+    "node:CRON — Automatic Article Generation Schedule": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "CRON — Automatic Article Generation Schedule": [
+      {
+        "json": {
+          "timestamp": "2026-04-15T11:00:00.014-05:00",
+          "Readable date": "April 15th 2026, 11:00:00 am",
+          "Readable time": "11:00:00 am",
+          "Day of week": "Wednesday",
+          "Year": "2026",
+          "Month": "April",
+          "Day of month": "15",
+          "Hour": "11",
+          "Minute": "00",
+          "Second": "00",
+          "Timezone": "America/Chicago (UTC-05:00)"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "8579f96f-8865-4f81-9431-025bca7c5550",
+  "activeVersionId": "9bc6ee0e-a3f9-4868-8bc7-90fead36c4f2",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-11-30T14:10:29.441Z",
+      "createdAt": "2025-11-30T14:10:29.441Z",
+      "role": "workflow:owner",
+      "workflowId": "1wQ1HFdQArmgDQG1",
+      "projectId": "4YBqTudLOBUQfTvU"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-03-05T17:55:49.901Z",
+    "createdAt": "2026-03-05T17:55:48.204Z",
+    "versionId": "9bc6ee0e-a3f9-4868-8bc7-90fead36c4f2",
+    "workflowId": "1wQ1HFdQArmgDQG1",
+    "nodes": [
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-5.2",
+            "mode": "list",
+            "cachedResultName": "gpt-5.2"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          2128,
+          304
+        ],
+        "id": "1eef4308-c9a2-4274-bdc8-546ff8f790b5",
+        "name": "OpenAI Chat Model",
+        "credentials": {
+          "openAiApi": {
+            "id": "Navm9hDUnjwpRcbB",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nreturn $input.first().json['0']\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          512,
+          80
+        ],
+        "id": "586ec22a-b63f-4b9c-b8af-d03243ce251f",
+        "name": "Build AI Prompt for Article Generation"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "== `Please create a blog post on this topic:\nTopic: {{ $('DB Insert — Save Article Record').first().json.idea_title }}\nCluster: {{ $('DB Insert — Save Article Record').first().json.topic_cluster }}\nPersona: {{ $('DB Insert — Save Article Record').first().json.persona }}\n",
+          "options": {
+            "systemMessage": "=You are the primary blog writer for Blaze Real Estate, serving Amarillo and the greater Texas Panhandle.\n\nThis workflow is ONLY for creating brand-new blog posts from metadata.\nYou are NOT rewriting, refreshing, or updating existing articles.\n\nYou write long-form, Blaze-branded content across three domains:\n\nResidential real estate sales (buying, selling, pricing, strategy, financing)\nResidential property management (landlording, operations, systems, Texas rental context)\nResident education & local living (renters’ expectations, responsibilities, and life in the Panhandle)\n\nBRAND AUTHORITY (NON-NEGOTIABLE)\n\nBefore writing anything, load and internalize the Blaze Brand Brain below.\nIt defines Blaze’s voice, boundaries, tone, and local reality.\n\nYou must follow it and never contradict it.\n\nBLAZE BRAND BRAIN:\n{{ $('AI Context Builder — “Blaze Brain” Memory').first().json.blazeBrain }}\n\nINPUT METADATA YOU WILL RECEIVE\n(Some fields may be empty)\n\nidea_title – working title / topic\ntopic_cluster – content category\npersona – target reader (owner, investor, buyer, seller, tenant, resident)\nfocus_keyword – optional seed keyword (may be generic or empty)\nadditional_keywords – optional related phrases (may be empty)\ncornerstone – yes / no\nword_count_target – optional soft target\n\nYour job is to create a new article that fits:\nthe topic_cluster\nthe persona\nthe Blaze Brand Brain\n\nDOMAIN LOGIC (STRICT — NO DRIFT)\n\nDetermine the domain using topic_cluster + persona.\n\nPROPERTY MANAGEMENT / RESIDENT DOMAIN\n\nIf the topic or persona involves:\n- landlords or rental owners\n- tenants or residents\n- leasing, screening, maintenance, operations\n- Texas rentals or landlord–tenant context\n- resident education or renting guidance\n\n→ Set domain = \"property_management\"\n\nVoice rules:\n- Owners/landlords/investors → professional Texas property manager\n- Tenants/residents → calm, practical local housing expert\n- Focus on systems, process, risk awareness, and real-world operation\n- Stay rental-focused\n- Do NOT drift into buyer/seller education\n\nSALES / RESIDENTIAL REAL ESTATE DOMAIN\n\nIf the topic or persona involves:\n- buyers or sellers\n- pricing, listings, staging, negotiations, timing\n\n→ Set domain = \"sales\"\n\nVoice rules:\n- Experienced Amarillo broker\n- Strategy, decision-making, avoiding bad advice\n- Do NOT convert sales content into PM education\n\nINVESTOR / STRATEGY DOMAIN\n\nIf the topic or persona involves:\n- investors\n- portfolios\n- financing\n- market strategy\n\n→ Set domain = \"investor\"\n\nVoice rules:\n- Analytical, systems-aware\n- Blend numbers, operations, and risk\n\nNEVER:\n- Convert PM/resident content into sales\n- Convert sales content into PM\n- Change the intended persona\n\nAUDIENCE & VOICE (BLAZE STANDARD)\n\nAudience is dictated by persona.\n\nBlaze voice:\n- Confident, seasoned, direct\n- Texas Panhandle practical — no fluff\n- Conversational but professional\n- Light, dry humor when appropriate\n- Tell-it-like-it-is with operational insight\n- Use Amarillo / Panhandle examples when helpful\n\nLegal boundary:\n- Respect Texas Property Code context\n- Do NOT give legal advice\n- Use disclaimers when touching regulations\n\nFor tenants/residents:\n- Calm, clear, non-alarming\n- Explain expectations on both sides\n- Emphasize communication and process\n\n🔒 SEO INTENT LOCK (CRITICAL)\n\nBefore writing ANY content, lock SEO intent.\n\nYou are optimizing for:\n- ONE primary search intent\n- ONE primary focus keyword\n\nYour goal is NOT keyword volume.\nYour goal is to be the best answer to the intent behind the focus keyword.\n\nDetermine internally:\n- what problem the searcher is solving\n- what success looks like for that searcher\n- how the article must be structured to fully satisfy the intent\n\nIf the keyword implies legal, medical, or professional advice:\n- reframe as risk awareness\n- explain process\n- provide decision guidance\n- explain when to involve a professional\n\nNever position Blaze as:\n- a lawyer\n- an accountant\n- a regulator\n\nUse experiential language:\n- “we often see…”\n- “in practice…”\n- “what usually causes issues…”\n\nAvoid absolute language:\n- “must”\n- “required”\n- “guaranteed”\n\n⛔ KEYWORD LOCK GATE (HARD — DO THIS BEFORE WRITING)\n\nYou MUST finalize SEO keywords before drafting content.\n\nIf the focus keyword is generic or could apply to multiple domains\n(homeowners, insurance, construction, general advice),\nyou MUST revise it to explicitly encode the article’s domain\n(rental, tenant, landlord, property management).\n\nYou are NOT allowed to proceed until:\n- the focus keyword is domain-specific\n- the focus keyword is at least as specific as every additional keyword\n\nIf this condition is not met, revise the focus keyword before continuing.\n\nFOCUS KEYWORD DERIVATION (HARD RULE)\n\nThe seo_focus_keyword is NOT a creative choice.\n\nYou MUST derive it from the finalized title or slug using these rules:\n- remove filler words (what, counts, guide, how, should, know)\n- preserve domain qualifiers (rental, tenant, landlord, investor)\n- lowercase the result\n- ensure it matches the article’s domain\n\nIf the title or slug includes a domain qualifier,\nthe focus keyword MUST include it.\n\nYou are NOT allowed to output a more generic focus keyword\nthan the title or slug.\n\nKEYPHRASE GENERATION (AIOSEO-SAFE — HARD RULES)\n\nOutput exactly:\n- seo_focus_keyword: ONE string\n- seo_additional_keywords: array of strings\n\nHARD LIMITS:\n- focus keyword: exactly 1\n- additional keywords: exactly 4 (min 3, max 6)\n\nFORMAT RULES (APPLY TO ALL KEYWORDS):\n- lowercase only\n- 2–6 words (7–8 only if absolutely necessary)\n- no commas inside a keyword\n- no quotes, brackets, parentheses, slashes, pipes\n- no trailing punctuation\n- no “best / top / ultimate” unless article explicitly uses that format\n- no location modifiers unless intent is explicitly local/provider-based\n\nINTENT RULES:\n- focus keyword = primary query the article answers\n- additional keywords = distinct sub-intents covered as real sections\n- no synonyms, no plural/singular variants\n- no dictionary-only terms\n- no umbrella topics\n\nEach additional keyword must be clearly subordinate to the focus keyword.\n\nINTERNAL KEYWORD SELF-CHECK (MANDATORY):\n- focus keyword is domain-specific\n- focus keyword is more specific than every additional keyword\n- additional keywords are unique and non-overlapping\n- each additional keyword maps to a real subsection\n\nFORMATTING RULES\n\nOutput article body as Markdown in blog_post\nUse ## for main sections, ### for subsections\nShort paragraphs (2–4 sentences)\nMax ONE bullet list total\nNever use tables\n\nSEO & LENGTH RULES\n\nUse seo_focus_keyword naturally:\n- intro\n- 1–2 headings\n- conclusion\n- sparingly in body\n\nDo NOT keyword-stuff.\n\nLength:\n- Cornerstone = yes → ~1,500+ words\n- Otherwise → ~900–1,200 words\n\nStructure:\n- Strong local-relevance hook\n- Define the problem\n- Explain how it works in practice\n- Practical guidance and examples\n- Common mistakes or bad advice\n- Clear conclusion with next steps\n\nCTA GUIDANCE (SOFT ONLY)\n\nCTAs must feel natural:\n- PM / owners / investors → value of systems and management\n- Tenants / residents → clarity and protection\n- Buyers / sellers → advantage of experienced operator\n\nTOOL USAGE (PERPLEXITY REQUIRED)\n\nBefore drafting, call Perplexity once for:\n- high-level context\n- definitions\n- recent or non-obvious trends (if relevant)\n\nDo NOT:\n- contradict Blaze Brand Brain\n- rely blindly on research\n- turn the article academic\n\nInternalize research, then write in Blaze voice.\n\n✅ OUTPUT FIELD CONSTRAINTS (HARD)\n\nReturn ONE valid JSON object with exactly these fields:\n\n{\n  \"title\": \"\",\n  \"slug\": \"\",\n  \"blog_post\": \"\",\n  \"excerpt\": \"\",\n\n  \"persona\": \"\",\n  \"topic_cluster\": \"\",\n  \"domain\": \"\",\n\n  \"seo_title\": \"\",\n  \"seo_meta_description\": \"\",\n  \"seo_focus_keyword\": \"\",\n  \"seo_additional_keywords\": [],\n  \"seo_cornerstone\": false,\n\n  \"twitter_caption\": \"\",\n  \"facebook_caption\": \"\",\n  \"linkedin_caption\": \"\"\n}\n\nTITLE RULE:\n- 45–60 characters\n- CTR-focused\n- No branding\n- Rewrite if too long\n\nEXCERPT RULE:\n- 140–160 characters\n- Intent-matched\n- No legal promises\n- Not copied from body\n- Rewrite if vague or too long\n\nFINAL SELF-CHECK (INTERNAL)\n\nConfirm before output:\n- one clear search intent\n- focus keyword derived correctly\n- keyword hierarchy is correct\n- Blaze positioned as experienced operator\n- title and excerpt within limits\n- JSON is valid and parseable\n\nRules:\n- No code fences\n- No commentary\n- No extra fields\n- Do not include Blaze Brand Brain text\n"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 2.2,
+        "position": [
+          2144,
+          96
+        ],
+        "id": "be16abbe-6863-4b10-9f7a-b5b6f0cb08a8",
+        "name": "AI Article Generator — Main Content"
+      },
+      {
+        "parameters": {
+          "model": "sonar-pro",
+          "messages": {
+            "message": [
+              {
+                "content": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('message0_Text', `Please search the keyword `, 'string') }}"
+              }
+            ]
+          },
+          "options": {},
+          "requestOptions": {}
+        },
+        "type": "n8n-nodes-base.perplexityTool",
+        "typeVersion": 1,
+        "position": [
+          2288,
+          304
+        ],
+        "id": "c558c656-885f-46e0-b1c4-c777f35d0ab4",
+        "name": "AI Research Assistant — Fact Checking",
+        "credentials": {
+          "perplexityApi": {
+            "id": "6uQOpEkxXSgolYOk",
+            "name": "Perplexity account"
+          }
+        },
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=Title: {{ $json.title }}\nBlog post:{{ $json.blog_post }}\npersona: {{ $json.persona }}\ntopic cluster: {{ $json.topic_cluster }}\nDomain: {{ $json.domain }}",
+          "options": {
+            "systemMessage": "=You are a classification engine for Blaze Real Estate’s WordPress blog.\n\nYour job is to look at the blog title and content and choose:\n\nONE primary category slug\n0–2 additional category slugs\n3–7 tag slugs\n\nThis unified model supports both Property Management (PM) and Real Estate Sales (SALES) content.\n\n🔥 DOMAIN LOGIC (DO NOT BREAK THESE RULES)\n\nDetermine the domain strictly from the article’s content:\n\nPROPERTY MANAGEMENT domain if the content includes topics such as:\n- landlords / rental property owners\n- tenants / leasing / showings\n- maintenance, repairs, vendors\n- operations, systems, workflows\n- compliance, fair housing, Texas Property Code\n- rent growth (as it relates to rentals)\n\nREAL ESTATE SALES domain if the content includes topics such as:\n- buying or selling a home\n- pricing, staging, listing strategy\n- home search, showings for buyers\n- market updates, interest rates (as they affect buying/selling)\n- retail residential trends\n- investor acquisition strategy (non-PM)\n\nNever convert the domain — classify based only on what the article actually is.\n\n✳️ PROPERTY MANAGEMENT TAXONOMY (use ONLY if domain = PM)\nAllowed category slugs:\n- property-management\n- owner-education\n- tenant-resources\n- compliance-legal\n- operations-systems\n- maintenance-vendors\n- compliance-education\n- texas-landlord-law\n- recordkeeping-filing-systems\n- professional-standards\n- policy-procedure-guides\n- guides-resources\n- fair-housing\n\nAllowed tag slugs:\n- TexasPropertyCode\n- AppFolio\n- TenantTips\n- OwnerTips\n- Maintenance\n- Compliance\n- Operations\n- FilingSystem\n- RepairsAndMaintenance\n- PropertyManagement\n- security\n- showings\n- tenant-screening\n- best-practices\n- self-showing\n- rental-process\n- property-management\n- innovation\n- legal-compliance\n- fair-housing-laws\n- holiday-fair-housing-compliance\n- tenant-relations\n- compliance-training\n- inclusive-community\n\n✳️ REAL ESTATE SALES TAXONOMY (use ONLY if domain = SALES)\nAllowed category slugs:\n- real-estate-sales\n- buying-guides\n- selling-guides\n- market-updates\n- investor-insights\n- community-spotlights\n- investor-strategy\n- market-trends\n\nAllowed tag slugs:\n- AmarilloMarket\n- InvestmentStrategy\n- home-prices\n- occupancy\n- leasing-funnel\n- q4-2025\n- interest-rates\n- rent-growth\n- OwnerTips\n- best-practices\n- PropertyManagement\n\n🧠 CLASSIFICATION RULES (UNIVERSAL)\n\nPick exactly ONE primary_category_slug.\n\nadditional_category_slugs can include 0–2 from the same domain list.\n\nTag slugs must be unique, domain-appropriate, and drawn ONLY from the allowed lists.\n\nIf unsure of domain, choose PROPERTY MANAGEMENT — Blaze is PM-first.\n\nIf unsure within PM, use:\n- primary_category_slug: \"property-management\"\n- tag_slugs: [\"PropertyManagement\"]\n\nNever mix PM and SALES taxonomies.\n\n📤 OUTPUT FORMAT (NO commentary)\n\nReturn ONLY valid JSON:\n\n{\n  \"primary_category_slug\": \"\",\n  \"additional_category_slugs\": [],\n  \"tag_slugs\": []\n}\n"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 2.2,
+        "position": [
+          2944,
+          96
+        ],
+        "id": "99db9a60-6a5a-4259-b7a1-0ef092efefec",
+        "name": "AI Topic Classifier — Categories & Tags"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-4.1-mini"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          2912,
+          304
+        ],
+        "id": "100fba1c-4e3f-46cc-a9bd-0f5cf1939563",
+        "name": "AI SEO Metadata Generator",
+        "credentials": {
+          "openAiApi": {
+            "id": "Navm9hDUnjwpRcbB",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nlet combined = \"\";\n\nfor (const item of items) {\n  const name = item.json.name || 'unnamed';\n\n  // Get binary content from the \"data\" property\n  const binary = item.binary?.data;\n  if (!binary || !binary.data) {\n    combined += `\\n\\n### FILE: ${name}\\n[NO CONTENT FOUND]\\n`;\n    continue;\n  }\n\n  const buffer = Buffer.from(binary.data, 'base64');\n  const text = buffer.toString('utf8');\n\n  combined += `\\n\\n### FILE: ${name}\\n${text}`;\n}\n\nreturn {\n  json: {\n    blazeBrain: combined,\n  },\n};\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1920,
+          96
+        ],
+        "id": "b9b046f4-20da-4093-878c-172b68573e7e",
+        "name": "AI Context Builder — “Blaze Brain” Memory"
+      },
+      {
+        "parameters": {
+          "resource": "fileFolder",
+          "queryString": "blaze_ai.yaml",
+          "filter": {
+            "folderId": {
+              "__rl": true,
+              "value": "1ff3rKO8GkwyBzHWcEet7ZTatWwQvhAfi",
+              "mode": "list",
+              "cachedResultName": "10_Blaze_AI_Brain",
+              "cachedResultUrl": "https://drive.google.com/drive/folders/1ff3rKO8GkwyBzHWcEet7ZTatWwQvhAfi"
+            }
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          1264,
+          96
+        ],
+        "id": "0e4abb95-116b-4806-a583-8aff60923888",
+        "name": "Retrieve Relevant Blaze Brain Snippets",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "cer2DAVMEta9v7Fb",
+            "name": "Google Drive account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "download",
+          "fileId": {
+            "__rl": true,
+            "value": "={{ $json.id }}",
+            "mode": "id"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          1504,
+          96
+        ],
+        "id": "52d6d96e-5953-4898-a79e-63adbe60e05b",
+        "name": "Retrieve Attached Documents",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "cer2DAVMEta9v7Fb",
+            "name": "Google Drive account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// n8n Code node (multi-item safe)\n\n// ✅ Single author enforcement (Brandon)\n// Set this to Brandon Stewart's actual WP user ID.\nconst SINGLE_AUTHOR_ID = 1;\n\n// Get all incoming items\nconst items = $input.all();\n\n// Map of category slug -> WP term ID\nconst categoryMap = {\n  'property-management': 15,\n  'owner-education': 16,\n  'tenant-resources': 17,\n  'compliance-legal': 18,\n  'operations-systems': 19,\n  'maintenance-vendors': 20,\n  'compliance-education': 32,\n  'texas-landlord-law': 33,\n  'recordkeeping-filing-systems': 34,\n  'professional-standards': 35,\n  'policy-procedure-guides': 36,\n  'guides-resources': 37,\n  'fair-housing': 67,\n\n  'real-estate-sales': 4,\n  'buying-guides': 23,\n  'selling-guides': 34,\n  'market-updates': 25,\n  'investor-insights': 26,\n  'community-spotlights': 27,\n  'investor-strategy': 74,\n  'market-trends': 75\n};\n\n// Map of tag slug -> WP term ID\nconst tagMap = {\n  'TexasPropertyCode': 38,\n  'AppFolio': 39,\n  'TenantTips': 40,\n  'OwnerTips': 41,\n  'Maintenance': 44,\n  'Compliance': 45,\n  'Operations': 47,\n  'FilingSystem': 48,\n  'RepairsAndMaintenance': 49,\n  'PropertyManagement': 50,\n  'security': 51,\n  'showings': 52,\n  'tenant-screening': 53,\n  'best-practices': 54,\n  'self-showing': 55,\n  'rental-process': 56,\n  'property-management': 57,\n  'innovation': 58,\n  'legal-compliance': 60,\n  'fair-housing-laws': 61,\n  'holiday-fair-housing-compliance': 62,\n  'tenant-relations': 64,\n  'compliance-training': 65,\n  'inclusive-community': 66,\n\n  'AmarilloMarket': 0,\n  'InvestmentStrategy': 0,\n  'home-prices': 0,\n  'occupancy': 0,\n  'leasing-funnel': 0,\n  'q4-2025': 0,\n  'interest-rates': 0,\n  'rent-growth': 0\n};\n\nconst out = [];\n\nfor (const item of items) {\n  // classification JSON string from model\n  const raw = item.json.output;\n\n  if (!raw || typeof raw !== 'string') {\n    out.push(item);\n    continue;\n  }\n\n  let classification;\n  try {\n    classification = JSON.parse(raw);\n  } catch (e) {\n    out.push(item);\n    continue;\n  }\n\n  const primarySlug = classification.primary_category_slug;\n  const additionalSlugs = classification.additional_category_slugs || [];\n  const tagSlugs = classification.tag_slugs || [];\n\n  // ✅ Enforce single author ALWAYS\n  const authorId = SINGLE_AUTHOR_ID;\n\n  // Build category IDs array\n  const categoryIds = [];\n\n  if (primarySlug && categoryMap[primarySlug]) {\n    const id = categoryMap[primarySlug];\n    if (id && !categoryIds.includes(id)) categoryIds.push(id);\n  }\n\n  for (const slug of additionalSlugs) {\n    const id = categoryMap[slug];\n    if (id && !categoryIds.includes(id)) categoryIds.push(id);\n  }\n\n  // Build tag IDs array\n  const tagIds = [];\n  for (const slug of tagSlugs) {\n    const id = tagMap[slug];\n    if (id && !tagIds.includes(id)) tagIds.push(id);\n  }\n\n  out.push({\n    json: {\n      ...item.json,\n      wp_categories: categoryIds,\n      wp_tags: tagIds,\n      author_id: authorId,\n    },\n  });\n}\n\nreturn out;\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3264,
+          96
+        ],
+        "id": "74128c78-006a-4b67-a7f9-9cee3b2fe722",
+        "name": "Build WP Taxonomy IDs + Author Mapping"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          32,
+          -16
+        ],
+        "id": "6f2ae4f0-fe72-4f15-a38f-6a28e3ed52e4",
+        "name": "Manual Run Trigger — Debug Only"
+      },
+      {
+        "parameters": {
+          "resource": "image",
+          "model": "gpt-image-1",
+          "prompt": "=You are a professional, realism-focused image generator creating photography-style images for a modern property management blog.\n\nYour task is to generate varied, relevant scenes that visually support the specific blog section provided. Images should feel authentic, human, and practical—like they were shot for a real Texas property management company, not a stock photo graveyard.\n\nVisual Style & Quality\n\nUltra-realistic, high-resolution photography\n\nNatural daylight or soft, neutral indoor lighting\n\nClean, modern Texas-style rental properties\n\nSingle-family homes\n\nDuplexes\n\nSmall multifamily buildings\n\nProfessional composition with a warm, approachable feel\n\nReal-world imperfections allowed (but no messes or chaos)\n\nThink: “competent, calm, and human—not staged or cheesy.”\n\nAllowed Subjects (Rotate for Variety)\n\nPeople (optional, but realistic when included):\n\nProperty managers\n\nTenants\n\nOwners\n\nMaintenance technicians\n\nScenes may include (do not repeat patterns):\n\nMove-in or move-out walkthroughs\n\nFriendly, professional tenant conversations\n\nMaintenance evaluations or light repair moments\n\nProperty manager reviewing paperwork with an owner\n\nOffice-based rent processing or customer service scenes\n\nInterior shots of clean, rental-ready homes\n\nExterior curb-appeal shots of rental properties\n\nTenants touring a unit\n\nEach image should feel distinct. No “same shot, different shirt” nonsense.\n\nRestricted Elements (Use Only If Explicitly Mentioned)\n\nDo NOT include the following unless the blog section clearly references them:\n\nLockboxes\n\nKey handoffs\n\nDoor notices\n\nPosted signage\n\n“For rent” or “For sale” signs\n\nRepeated props or visual clichés\n\nIf it’s not in the article, it doesn’t magically appear.\n\nMood & Tone\n\nProfessional and confident\n\nCalm, organized, and capable\n\nWarm and human\n\nLightly relatable when appropriate (subtle stress is fine—goofy is not)\n\nNo sitcom energy. This is grown-up business.\n\nComposition Rules\n\nSingle, clear focal point\n\nNo text, captions, labels, or signage in the image\n\nMinimal clutter\n\nNo visible branding or logos\n\nAvoid dramatic angles or gimmicky perspectives\n\nThe image should support the content, not scream for attention.\n\nFinal Instruction\n\nGenerate one realistic image that visually supports the following section of the blog post:\n\n{{ $json[\"message.content.blog_post_images\"] }}",
+          "options": {
+            "size": "1024x1024"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1.8,
+        "position": [
+          640,
+          784
+        ],
+        "id": "c24f8b3a-6c43-4292-9613-d7981a3c4cfd",
+        "name": "AI Featured Image Generator",
+        "credentials": {
+          "openAiApi": {
+            "id": "Navm9hDUnjwpRcbB",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4.1-mini",
+            "mode": "list",
+            "cachedResultName": "GPT-4.1-MINI"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=You generate cinematic, photography-ready image prompts that visually support a Blaze Real Estate blog post. Your goal is to provide visual variety across the post by utilizing different scales, from wide architectural shots to intimate details.\n\nYour job is to create exactly 3 unique image prompts for the entire blog post provided.\n\nCore Rule (Critical):\nEvery prompt you generate must describe a scene that could plausibly be photographed in the real world. Provide exactly 3 prompts total. Ensure each of the three prompts uses a different camera distance (e.g., one wide/environmental, one medium/interior, one close-up/detail).\n\nConcepts like systems, automation, and efficiency should be shown through:\n\nEnvironments and Architecture\n\nModern Textures (Limestone, white oak, glass, steel)\n\nIntegrated Technology\n\nSpatial Organization and Symmetry\n\nLighting and Composition\n—not pure abstraction or repetitive office setups.\n\nStyle Direction:\n\nClean, modern, professional photography\n\nCinematic lighting (soft daylight, controlled indoor light, or Texas golden hour)\n\nMinimalist, intentional composition\n\nCalm, high-competence atmosphere\n\nModern Texas property management context (think Austin/Dallas/Houston high-end residential)\n\nNo gritty realism. No stylized illustration. No surreal visuals.\n\nConceptual → Photographic Translation Guide:\nUse diverse visual metaphors grounded in reality:\n\nA wide-angle exterior of a modern Texas limestone property, emphasizing symmetrical landscaping and clear blue sky.\n\nA close-up of a sleek, integrated smart-home interface or minimalist thermostat set against a textured designer wall.\n\nA sun-drenched, empty modern entryway with an organized console table (keys, a small succulent, a leather tray) implying a ready-for-move-in state.\n\nA view through a floor-to-ceiling window showing a manicured residential street, emphasizing peace and oversight.\n\nAn architectural detail shot of a modern staircase or hallway showing clean lines and repetitive patterns to represent \"systems.\"\n\nIf it can’t be photographed, don’t describe it.\n\nPeople Usage:\n\nPrefer no people.\n\nIf included, they must be: Natural, secondary to the environment, and captured in soft focus or from a distance.\n\nAbsolute Avoid List:\nNever include: Desktops with laptops (unless absolutely necessary for the specific topic), lockboxes, posted notices, “For rent” or “For sale” signs, literal paperwork, or staged stock-photo scenes.\n\nOutput Rules:\n\nReturn exactly 3 image prompts total.\n\nEach prompt is a single paragraph.\n\nNo commentary.\n\nNo markdown.\n\nNo numbering.",
+                "role": "system"
+              },
+              {
+                "content": "={{ $('Parse AI JSON — Extract Post Content').item.json.blog_post }}"
+              },
+              {
+                "content": "==Please output exactly 3 prompts in JSON format with the following structure:\n{\n  \"blog_post_images\": [\n    \"prompt 1\",\n    \"prompt 2\",\n    \"prompt 3\"\n  ]\n}",
+                "role": "assistant"
+              }
+            ]
+          },
+          "jsonOutput": true,
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1.8,
+        "position": [
+          64,
+          784
+        ],
+        "id": "a459c251-1d7b-4d33-9c5c-c9f1ce1271eb",
+        "name": "Build Image Prompts from SEO Topics",
+        "retryOnFail": true,
+        "waitBetweenTries": 5000,
+        "credentials": {
+          "openAiApi": {
+            "id": "Navm9hDUnjwpRcbB",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=Generate alt text for this image:\n{{ $('Split Image Prompts into Individual Items').item.json['message.content.blog_post_images'] }}\n\nArticle topic: {{ $('AI SEO Title Optimization Pass').item.json.seo_title }}\n\n",
+          "options": {
+            "systemMessage": "You generate clean, SEO-optimized alt descriptions for blog images.\nWrite 1 alt text sentence per input prompt.\n\nRules:\n- 100–140 characters.\n- Human and natural — NOT keyword stuffing.\n- Describe what someone sees (not conceptual).\n- Include 1 relevant keyword from the article title when possible.\n- No ending periods.\n"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 2.2,
+        "position": [
+          1296,
+          784
+        ],
+        "id": "5dcc48b4-4080-432b-83b9-1f0101fa8265",
+        "name": "AI Image ALT Text Writer"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-4.1-mini"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          1264,
+          992
+        ],
+        "id": "0bd327d4-6b88-4b1e-af98-67c2e94619ac",
+        "name": "AI Secondary Content Enhancer (rewrite pass)",
+        "credentials": {
+          "openAiApi": {
+            "id": "Navm9hDUnjwpRcbB",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "message.content.blog_post_images",
+          "include": "allOtherFields",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          416,
+          784
+        ],
+        "id": "3894100b-25e2-4f1e-a246-fe4773e5f400",
+        "name": "Split Image Prompts into Individual Items"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "table": {
+            "__rl": true,
+            "value": "blog_posts",
+            "mode": "list",
+            "cachedResultName": "blog_posts"
+          },
+          "dataMode": "defineBelow",
+          "columnToMatchOn": "id",
+          "valueToMatchOn": "={{ $json.id }}",
+          "valuesToSend": {
+            "values": [
+              {
+                "column": "topic_cluster",
+                "value": "={{ $json.topic_cluster }}"
+              },
+              {
+                "column": "idea_title",
+                "value": "={{ $json.idea_title }}"
+              },
+              {
+                "column": "working_title",
+                "value": "={{ $json.working_title }}"
+              },
+              {
+                "column": "slug",
+                "value": "={{ $json.slug }}"
+              },
+              {
+                "column": "persona",
+                "value": "={{ $json.persona }}"
+              },
+              {
+                "column": "cornerstone",
+                "value": "={{ $json.cornerstone }}"
+              },
+              {
+                "column": "focus_keyword",
+                "value": "={{ $json.focus_keyword }}"
+              },
+              {
+                "column": "additional_keywords",
+                "value": "={{ $json.additional_keywords }}"
+              },
+              {
+                "column": "status",
+                "value": "={{ $json.status }}"
+              },
+              {
+                "column": "content_html",
+                "value": "={{ $json.content_html }}"
+              },
+              {
+                "column": "excerpt",
+                "value": "={{ $json.excerpt }}"
+              },
+              {
+                "column": "seo_title",
+                "value": "={{ $json.seo_title }}"
+              },
+              {
+                "column": "seo_meta_description",
+                "value": "={{ $json.seo_meta_description }}"
+              },
+              {
+                "column": "seo_cornerstone",
+                "value": "={{ $json.seo_cornerstone }}"
+              },
+              {
+                "column": "wp_post_id",
+                "value": "={{ $json.wp_post_id }}"
+              },
+              {
+                "column": "wp_slug",
+                "value": "={{ $json.wp_slug }}"
+              },
+              {
+                "column": "wp_url",
+                "value": "={{ $json.wp_url }}"
+              },
+              {
+                "column": "wp_status",
+                "value": "={{ $json.wp_status }}"
+              },
+              {
+                "column": "wp_primary_category_id",
+                "value": "={{ $json.wp_primary_category_id }}"
+              },
+              {
+                "column": "wp_category_ids",
+                "value": "={{ $json.wp_category_ids }}"
+              },
+              {
+                "column": "wp_tag_ids",
+                "value": "={{ $json.wp_tag_ids }}"
+              },
+              {
+                "column": "wp_author_id",
+                "value": "={{ $json.wp_author_id }}"
+              },
+              {
+                "column": "image_prompt_primary",
+                "value": "={{ $('Build Image Prompts from SEO Topics')\n    .first()\n    .json\n    .message\n    .content\n    .blog_post_images[0]\n}}\n\n"
+              },
+              {
+                "column": "image_prompt_secondary",
+                "value": "={{ $('Build Image Prompts from SEO Topics')\n    .first()\n    .json\n    .message\n    .content\n    .blog_post_images[1]\n}}"
+              },
+              {
+                "column": "image_primary_url",
+                "value": "={{ $json.image_primary_url }}"
+              },
+              {
+                "column": "image_secondary_url",
+                "value": "={{ $json.image_secondary_url }}"
+              },
+              {
+                "column": "image_tertiary_url",
+                "value": "={{ $json.image_tertiary_url }}"
+              },
+              {
+                "column": "image_primary_guid",
+                "value": "={{ $json.image_primary_guid }}"
+              },
+              {
+                "column": "image_secondary_guid",
+                "value": "={{ $json.image_secondary_guid }}"
+              },
+              {
+                "column": "image_tertiary_guid",
+                "value": "={{ $json.image_tertiary_guid }}"
+              },
+              {
+                "column": "image_primary_alt",
+                "value": "={{ $json.image_primary_alt }}"
+              },
+              {
+                "column": "image_secondary_alt",
+                "value": "={{ $json.image_secondary_alt }}"
+              },
+              {
+                "column": "social_x_caption",
+                "value": "={{ $json.social_x_caption }}"
+              },
+              {
+                "column": "social_facebook_caption",
+                "value": "={{ $json.social_facebook_caption }}"
+              },
+              {
+                "column": "social_linkedin_caption",
+                "value": "={{ $json.social_linkedin_caption }}"
+              },
+              {
+                "column": "last_workflow_name",
+                "value": "={{ $json.last_workflow_name }}"
+              },
+              {
+                "column": "last_workflow_run_id",
+                "value": "={{ $json.last_workflow_run_id }}"
+              },
+              {
+                "column": "last_ai_model",
+                "value": "={{ $json.last_ai_model }}"
+              },
+              {
+                "column": "last_prompt_version",
+                "value": "={{ $json.last_prompt_version }}"
+              },
+              {
+                "column": "generated_at",
+                "value": "={{ DateTime.now() }}"
+              },
+              {
+                "column": "content_markdown",
+                "value": "={{ $json.content_markdown }}"
+              },
+              {
+                "column": "seo_focus_keyword",
+                "value": "={{ $json.seo_focus_keyword }}"
+              },
+              {
+                "column": "seo_additional_keywords",
+                "value": "={{ $json.seo_additional_keywords }}"
+              },
+              {
+                "column": "wp_primary_category_slug",
+                "value": "={{ $json.wp_primary_category_slug }}"
+              },
+              {
+                "column": "wp_additional_category_slugs",
+                "value": "={{ $json.wp_additional_category_slugs }}"
+              },
+              {
+                "column": "wp_tag_slugs",
+                "value": "={{ $json.wp_tag_slugs }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          1520,
+          1136
+        ],
+        "id": "1b09d189-470a-4da2-9c85-3e0dff0e1bae",
+        "name": "DB Update — Associate WP Media IDs",
+        "credentials": {
+          "mySql": {
+            "id": "a3LZuEERCY9MEIMg",
+            "name": "Blaze Marketing Connection"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Input item from Keyword Article:\n// { \"output\": \"{ \\\"title\\\": \\\"...\\\", \\\"slug\\\": \\\"...\\\", \\\"blog_post\\\": \\\"...\\\", \\\"twitter_caption\\\": \\\"...\\\" }\" }\n\nreturn items.map(item => {\n  const raw = item.json.output;\n\n  // If the model ever wraps it in ```json fences, strip them\n  const cleaned = String(raw)\n    .replace(/```json/gi, '')\n    .replace(/```/g, '')\n    .trim();\n\n  const parsed = JSON.parse(cleaned);\n\n  return {\n    json: parsed,\n  };\n});\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2496,
+          96
+        ],
+        "id": "bb019abe-0925-4b7e-a887-d0f368198f1a",
+        "name": "Parse AI JSON — Extract Post Content"
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForEachItem",
+          "jsCode": "const item = $input.item;\n\n// Topic → slug\nconst topic = item.json.article_topic || item.json.topic || 'image';\nconst slug = topic\n  .toLowerCase()\n  .replace(/[^a-z0-9]+/g, '-')   // non-alphanumerics → -\n  .replace(/(^-|-$)/g, '');      // trim - from edges\n\nconst timestamp = new Date().toISOString().replace(/[-:.TZ]/g, '');\nconst imageFileName = `blaze-img-${slug}-${timestamp}.png`;\n\n// Copy binary and update metadata\nconst binary = item.binary || {};\nif (binary.data) {\n  binary.data.fileName = imageFileName;\n  binary.data.mimeType = 'image/png';\n}\n\nreturn {\n  json: {\n    ...item.json,\n    imageFileName,\n  },\n  binary,\n};\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          848,
+          784
+        ],
+        "id": "5f453756-9249-4048-906a-09cc0b2de8de",
+        "name": "Generate Unique Image Filenames (slug-based)"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://blazeproperty.com/wp-json/wp/v2/media",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "wordpressApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Disposition",
+                "value": "={{ 'attachment; filename=' + $json[\"imageFileName\"] }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "binaryData",
+          "inputDataFieldName": "data",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1072,
+          784
+        ],
+        "id": "ffcaefbf-6e7d-4091-b432-b8e12bb40571",
+        "name": "Upload Images to WordPress Media Library",
+        "retryOnFail": true,
+        "waitBetweenTries": 5000,
+        "credentials": {
+          "wordpressApi": {
+            "id": "vP3mdg084tWAWqK7",
+            "name": "Wordpress account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "=https://blazeproperty.com/wp-json/wp/v2/media/{{ $node[\"Upload Images to WordPress Media Library\"].json.id }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "wordpressApi",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "alt_text",
+                "value": "={{ $node[\"AI Image ALT Text Writer\"].json.output }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          64,
+          1136
+        ],
+        "id": "30f9a9d8-0bdb-4c47-879e-659c3a7bf6be",
+        "name": "Update ALT + Meta for Uploaded Media",
+        "credentials": {
+          "wordpressApi": {
+            "id": "vP3mdg084tWAWqK7",
+            "name": "Wordpress account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Collect all WordPress media responses and pair them with alt text\n\n// Media responses (this node's input – 3 items)\nconst mediaItems = $input.all();\n\n// Alt text items from Image ALT Builder\nconst altItems = $items(\"AI Image ALT Text Writer\", \"main\", 0, 0) || [];\n\nconst images = mediaItems.map((mediaItem, index) => {\n  const img = mediaItem.json || {};\n  const altItem = altItems[index];\n  const alt =\n    (altItem && altItem.json && altItem.json.output) ||\n    img.alt_text ||\n    \"\";\n\n  return {\n    id: img.id,\n    source_url: img.source_url,\n    guid: img.guid?.rendered || null,\n    alt,\n  };\n});\n\nreturn [\n  {\n    json: {\n      images,\n    },\n  },\n];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          288,
+          1136
+        ],
+        "id": "17c2e2cd-d745-4893-9dea-ec0239424765",
+        "name": "Collect Published Media URLs & GUIDs"
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-5.2",
+            "mode": "list",
+            "cachedResultName": "GPT-5.2"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "==You are a professional blog layout designer for Blaze Real Estate’s website.\n\nYour job is to transform a Blaze blog post into a clean, semantic HTML FRAGMENT that will be styled by an existing Elementor post template.\n\nYou will be given:\n- The blog title (for context only)\n- The full blog post content (in Blaze voice)\n- A list of image captions\n- A list of image URLs\n- Persona and topic/cluster context from earlier steps (via the text content itself)\n\nYou must:\n\nCRITICAL OUTPUT RULES (DO NOT VIOLATE)\n- Output an HTML FRAGMENT only.\n- Do NOT include <!DOCTYPE html>, <html>, <head>, or <body>.\n- Do NOT include any <style> tags.\n- Do NOT use any inline style attributes (no style=\"...\").\n- Do NOT set fonts, colors, margins, or layout. Elementor handles all styling.\n- Do NOT output the blog title as <h1>. The template already renders the title.\n\nSTRUCTURE RULES\n- Treat the input blog post as the source of truth for wording and order.\n- Break content into logical sections with:\n  - <h2> for main sections\n  - <h3> for subsections\n- Use <p> for paragraphs.\n- Use <ul> / <ol> only when necessary for clarity (checklists, clear steps).\n- Use <strong> and <em> for emphasis where it improves readability.\n- Do NOT invent new content. You may only:\n  - Split/merge paragraphs for clarity\n  - Convert obvious headings in the text to <h2>/<h3>\n  - Lightly smooth transitions if needed, without changing meaning.\n\nIMAGE PLACEMENT RULES\nYou will receive:\n- A list of image captions (comma-separated or clearly grouped)\n- A list of image URLs\n\nAssume captions and URLs follow the same order.\n\nFor each image, generate:\n<figure>\n  <img src=\"IMAGE_URL\" alt=\"SHORT_ALT_TEXT\" />\n</figure>\n\nRules:\n- Do NOT add width, height, or any other attributes beyond src and alt.\n- Do NOT include inline styles.\n\nPlacement logic:\n- Treat the FIRST image as the primary/hero image.\n  - Place its <figure> near the top of the article, AFTER the opening hook / first 1–2 paragraphs, not before any text.\n- Place additional images:\n  - Near sections where the caption conceptually fits.\n  - Prefer placing them between logical sections (after a paragraph that matches the visual idea).\n  - Do NOT stack multiple images back-to-back unless the article clearly calls for it.\n- If there are more URLs than captions, omit <figcaption> for unmatched images.\n- If there are more captions than URLs, ignore the extra captions.\n\nLEAD-GENERATION FORM SHORTCODES\nYou may insert Blaze lead-generation forms in contextually appropriate places using these shortcodes (exact strings). These are based on Blaze’s route structure:\n\n- For property management / landlord / owner-focused articles:\n  - Property management owner lead form:\n    [pm_owner_short]\n\n- For investor-focused content (owning rentals, investing in the Panhandle, portfolio help, etc.):\n  - Investor lead form:\n    [investor_short]\n\n- For real estate sales content:\n  - Seller consult form:\n    [seller_short]\n  - Buyer consult form:\n    [buyer_short]\n\n- For commercial real estate content:\n  - Commercial client consult form:\n    [commercial_client_short]\n\n- For general “talk to us about your situation” or mixed/neutral content:\n  - General contact form:\n    [general_contact_short]\n\nRules for form placement:\n- Never place a form in the first 2–3 paragraphs.\n- Insert forms only where the content naturally suggests “next steps,” “get help,” “talk to a professional,” or “if this is you, here’s what to do.”\n- Maximum 2 forms per article.\n- Do NOT place two forms directly back-to-back.\n- Wrap each shortcode in its own paragraph for clarity, like:\n  <p>[pm_owner_short]</p>\n\nVOICE & CONTENT GUARDRAILS\n- Preserve Blaze voice: confident, practical, direct, slightly witty when appropriate.\n- Do NOT change the domain of the article:\n  - Property management content must stay PM-focused (owners, landlords, tenants, operations).\n  - Sales content stays sales-focused (buyers, sellers, market timing, strategy).\n  - Investor content stays investor-focused.\n  - Commercial content stays commercial-focused.\n- Do NOT add new long sections, stories, or opinions.\n- Do NOT add legal advice.\n\nFINAL OUTPUT\n- Return ONLY the HTML fragment.\n- No markdown.\n- No explanation or commentary.\n- No extra JSON, just the raw HTML fragment.\n",
+                "role": "system"
+              },
+              {
+                "content": "==Title: {{ $('Parse AI JSON — Extract Post Content').first().json.title }}\n\nPersona: {{ $('Parse AI JSON — Extract Post Content').first().json.persona }}\nTopic cluster: {{ $('Parse AI JSON — Extract Post Content').first().json.topic_cluster }}\n\nBlog post:\n{{ $('Parse AI JSON — Extract Post Content').first().json.blog_post }}\n\nImage captions (comma-separated, in order):\n{{ $('Build Image Prompts from SEO Topics').first().json.message.content.blog_post_images }}\n\nImage URLs (in order):\n{{ $('Collect Published Media URLs & GUIDs').first().json.images[0].source_url }}\n{{ $('Collect Published Media URLs & GUIDs').first().json.images[1].source_url }}\n{{ $('Collect Published Media URLs & GUIDs').first().json.images[2].source_url }}\n"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1.8,
+        "position": [
+          512,
+          1136
+        ],
+        "id": "ce7a4ad1-d1d4-41fa-8625-b0e33a35c144",
+        "name": "Apply Blaze Blog Layout + Rich Styling",
+        "credentials": {
+          "openAiApi": {
+            "id": "Navm9hDUnjwpRcbB",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "function parseObject(val) {\n  if (!val) return {};\n  if (typeof val === 'string') {\n    try { return JSON.parse(val); } catch (e) { return {}; }\n  }\n  return val;\n}\n\nfunction parseArray(val) {\n  if (!val) return [];\n  if (typeof val === 'string') {\n    try {\n      const parsed = JSON.parse(val);\n      return Array.isArray(parsed) ? parsed : [];\n    } catch (e) {\n      return [];\n    }\n  }\n  return Array.isArray(val) ? val : [];\n}\n\nfunction toCSV(val) {\n  if (!val) return null;\n  if (Array.isArray(val)) return val.join(',');\n  if (typeof val === 'string') return val;\n  return null;\n}\n\n// ----- INPUT OBJECTS -----\nconst seo      = parseObject($json.seo);\nconst catsTags = parseObject($json.catsTags);\nconst wpPost   = parseObject($json.wpPost);\nconst images   = parseArray($json.images);\nconst prompts  = parseArray($json.prompts);\n\n// Nested slugs live inside catsTags.output as a JSON string\nconst catsTagsOutput = parseObject(catsTags.output);\n\nconst img1 = images[0] || {};\nconst img2 = images[1] || {};\nconst img3 = images[2] || {};\n\nconst image_prompt_primary   = prompts[0] || null;\nconst image_prompt_secondary = prompts[1] || null;\nconst image_prompt_tertiary  = prompts[2] || null;\n\n// ----- ID / KEY -----\nconst mysqlIdRaw = $json.mysql_id;\n\nconst id = (mysqlIdRaw !== undefined && mysqlIdRaw !== null)\n  ? Number(mysqlIdRaw)\n  : null;\n\nif (!id || Number.isNaN(id)) {\n  throw new Error(\n    `Create mysql payload: missing or invalid mysql_id from Collect Post Data. Got: ${mysqlIdRaw}`\n  );\n}\n\n// ----- CONTENT -----\nconst content_html =\n  $json.content_html ||              // from Collect Post Data\n  seo.blog_post ||                   // fallback\n  \"\";\n\n// Main markdown body for SQL\nconst content_markdown =\n  seo.blog_post ||                   // your original MD\n  $json.content_markdown ||          // future-proof\n  \"\";\n\n// Excerpt\nconst excerpt =\n  seo.excerpt ||\n  (wpPost.excerpt && (wpPost.excerpt.raw || wpPost.excerpt.rendered)) ||\n  \"\";\n\n// ----- SEO -----\nconst seo_title            = seo.seo_title || seo.title || \"\";\nconst seo_meta_description = seo.seo_meta_description || \"\";\nconst seo_focus_keyword    = seo.seo_focus_keyword || \"\";\n\n// normalize additional keywords to a single string\nlet seo_additional_keywords = \"\";\nif (Array.isArray(seo.seo_additional_keywords)) {\n  seo_additional_keywords = seo.seo_additional_keywords.join(\", \");\n} else if (typeof seo.seo_additional_keywords === \"string\") {\n  seo_additional_keywords = seo.seo_additional_keywords;\n} else {\n  seo_additional_keywords = \"\";\n}\n\n// keep it numeric-ish for DB\nconst seo_cornerstone = seo.seo_cornerstone ? 1 : 0;\n\n// ----- WP CORE / TAXONOMY -----\nconst wp_post_id = wpPost.id || null;\nconst wp_slug    = wpPost.slug || seo.slug || \"\";\nconst wp_url     = wpPost.link || null;\nconst wp_status  = wpPost.status || \"draft\";\n\nconst wp_category_ids = toCSV(catsTags.wp_categories) || null;\nconst wp_tag_ids      = toCSV(catsTags.wp_tags) || null;\n\nconst wp_primary_category_id =\n  (catsTags.wp_categories && catsTags.wp_categories[0]) || null;\n\nconst wp_author_id = wpPost.author || catsTags.author_id || null;\n\n// ----- SLUG FIELDS (from catsTags.output) -----\nconst wp_primary_category_slug =\n  catsTagsOutput.primary_category_slug || null;\n\nconst wp_additional_category_slugs =\n  toCSV(catsTagsOutput.additional_category_slugs) || null;\n\nconst wp_tag_slugs =\n  toCSV(catsTagsOutput.tag_slugs) || null;\n\n// ----- IMAGES -----\nconst image_primary_url   = img1.source_url || null;\nconst image_secondary_url = img2.source_url || null;\nconst image_tertiary_url  = img3.source_url || null;\n\nconst image_primary_guid   = img1.guid || \"\";\nconst image_secondary_guid = img2.guid || \"\";\nconst image_tertiary_guid  = img3.guid || \"\";\n\nconst image_primary_alt   = img1.alt || null;\nconst image_secondary_alt = img2.alt || null;\n\n// ----- INTERNAL STATUS -----\nconst status = \"draft_created\";\n\n// ----- SOCIAL CAPTIONS -----\nconst social_x_caption        = seo.twitter_caption || null;\nconst social_facebook_caption = seo.facebook_caption || null;\nconst social_linkedin_caption = seo.linkedin_caption || null;\n\n// ----- WORKFLOW META -----\nconst last_workflow_name   = \"Blaze Content Engine v1\";\nconst last_workflow_run_id = $execution.id || null;\nconst last_ai_model        = \"gpt-4.1-mini\";\nconst last_prompt_version  = \"v1\";\n\n// ----- FINAL ROW -----\nconst row = {\n  id,\n\n  // planning/meta\n  topic_cluster: seo.topic_cluster || null,\n  idea_title: seo.idea_title || seo.title || null,\n  working_title: seo.title || null,\n  slug: seo.slug || wp_slug || null,\n  category_planned: seo.category_planned || null,\n  persona: seo.persona || null,\n  cornerstone: seo_cornerstone, // keep aligned with seo_cornerstone\n\n  // legacy fields if present in schema\n  focus_keyword: seo_focus_keyword || null,\n  additional_keywords: seo_additional_keywords || null,\n\n  // status + content\n  status,\n  content_html,\n  content_markdown,\n  excerpt,\n\n  // SEO\n  seo_title,\n  seo_meta_description,\n  seo_focus_keyword,\n  seo_additional_keywords,\n  seo_cornerstone,\n\n  // WP core\n  wp_post_id,\n  wp_slug,\n  wp_url,\n  wp_status,\n\n  // WP IDs\n  wp_primary_category_id,\n  wp_category_ids,\n  wp_tag_ids,\n\n  // WP slugs (the ones you care about)\n  wp_primary_category_slug,\n  wp_additional_category_slugs,\n  wp_tag_slugs,\n\n  // author\n  wp_author_id,\n\n  // image prompts\n  image_prompt_primary,\n  image_prompt_secondary,\n  // image_prompt_tertiary if you add that column later\n\n  // image URLs / GUID / ALT\n  image_primary_url,\n  image_secondary_url,\n  image_tertiary_url,\n  image_primary_guid,\n  image_secondary_guid,\n  image_tertiary_guid,\n  image_primary_alt,\n  image_secondary_alt,\n\n  // social\n  social_x_caption,\n  social_facebook_caption,\n  social_linkedin_caption,\n\n  // workflow trace\n  last_workflow_name,\n  last_workflow_run_id,\n  last_ai_model,\n  last_prompt_version,\n};\n\nreturn [{ json: row }];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1296,
+          1136
+        ],
+        "id": "b11cfd4e-c958-4550-ab90-55334a5e34eb",
+        "name": "Build SQL Insert Payload from WP + SEO"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://blazeproperty.com/wp-json/wp/v2/posts",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "wordpressApi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ (() => {\n\n  const seoRaw = $item(0).$node[\"Parse AI JSON — Extract Post Content\"].json || {};\n  const seoOpt = $item(0).$node[\"AI SEO Title Optimization Pass\"].json || {};\n  const cats   = $item(0).$node[\"Build WP Taxonomy IDs + Author Mapping\"].json || {};\n  const design = $item(0).$node[\"Apply Blaze Blog Layout + Rich Styling\"].json || {};\n  const media  = $item(0).$node[\"Collect Published Media URLs & GUIDs\"].json || {};\n  const images = media.images || [];\n\n  const seo = {\n    ...seoRaw,\n    ...(seoOpt.seo || {}),\n  };\n\n  const h1Title =\n    seo.h1_title ||\n    seoRaw.title ||\n    seoOpt.h1_title ||\n    seoOpt.title ||\n    seoOpt.seo_title ||\n    seo.seo_title ||\n    seo.title ||\n    \"Untitled\";\n\n  const metaTitle =\n    seoOpt.seo_title ||\n    seo.seo_title ||\n    seoOpt.title ||\n    seo.title ||\n    h1Title;\n\n  const contentHtml =\n    design.message?.content ||\n    design.html ||\n    seo.blog_post ||\n    \"\";\n\n  const featuredId = (images[0] && images[0].id) || 0;\n\n  // --- keywords for AIOSEO ---\n  const focusRaw =\n    seoOpt.seo_focus_keyword ||\n    seo.seo_focus_keyword ||\n    \"\";\n\n  const additionalRaw =\n    seoOpt.seo_additional_keywords ||\n    seo.seo_additional_keywords ||\n    [];\n\n  const additionalStrings = Array.isArray(additionalRaw)\n    ? additionalRaw\n    : (typeof additionalRaw === \"string\" && additionalRaw.trim()\n        ? additionalRaw.split(\",\").map(s => s.trim())\n        : []);\n\n  const additionalKeyphrases = additionalStrings\n    .map(s => String(s || \"\").trim())\n    .filter(Boolean)\n    .slice(0, 10)\n    .map(keyphrase => ({ keyphrase }));\n\n  const aioseo_meta_data = {\n    title: metaTitle,\n    description: seo.seo_meta_description || \"\",\n    keyphrases: {\n      focus: { keyphrase: String(focusRaw || \"\").trim() },\n      additional: additionalKeyphrases,\n    },\n  };\n\n  // --- your internal meta (optional, keep) ---\n  const meta = {\n    _blaze_seo_title:          metaTitle,\n    _blaze_seo_description:    seo.seo_meta_description || \"\",\n    _blaze_seo_focus_keyword:  String(focusRaw || \"\").trim(),\n    _blaze_seo_extra_keywords: additionalStrings.join(\", \"),\n  };\n\n  const body = {\n    title:          h1Title,\n    slug:           seo.slug || \"\",\n    content:        String(contentHtml || \"\"),\n    excerpt:        seo.excerpt || \"\",\n    status:         \"publish\",\n    author:         cats.author_id || 5,\n    categories:     cats.wp_categories || [],\n    tags:           cats.wp_tags || [],\n    featured_media: featuredId,\n    meta,\n    aioseo_meta_data,\n  };\n\n  // IMPORTANT: HttpRequest JSON body expects a JSON STRING it can parse\n  return JSON.stringify(body);\n\n})() }}\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          832,
+          1136
+        ],
+        "id": "822d2f1a-2342-4c5b-a76d-31c21d10c192",
+        "name": "Create WordPress Post via REST",
+        "credentials": {
+          "wordpressApi": {
+            "id": "vP3mdg084tWAWqK7",
+            "name": "Wordpress account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "b44e3bc8-f9bb-47e8-a3f6-60813e470b29",
+                "name": "seo",
+                "value": "={{ JSON.stringify($('Parse AI JSON — Extract Post Content').first().json) }}\n",
+                "type": "string"
+              },
+              {
+                "id": "41440d32-27de-4aa1-9c41-2dfa282d0f07",
+                "name": "catsTags",
+                "value": "={{ JSON.stringify($('Build WP Taxonomy IDs + Author Mapping').first().json) }}\n",
+                "type": "string"
+              },
+              {
+                "id": "d6dd7aff-1bdf-4a24-bd0d-5456ebec9914",
+                "name": "wpPost",
+                "value": "={{ JSON.stringify($('Create WordPress Post via REST').first().json) }}\n",
+                "type": "string"
+              },
+              {
+                "id": "a6d4cb67-a2da-4425-b982-950890b4ac1b",
+                "name": "images",
+                "value": "={{ JSON.stringify($('Collect Published Media URLs & GUIDs').first().json.images) }}\n",
+                "type": "string"
+              },
+              {
+                "id": "15d81c50-795d-4928-9c3d-2720cea0c6e1",
+                "name": "prompts",
+                "value": "={{ JSON.stringify(\n  $('Build Image Prompts from SEO Topics')\n    .first()\n    .json\n    .message\n    .content\n    .blog_post_images ?? []\n) }}\n\n",
+                "type": "string"
+              },
+              {
+                "id": "a513a12c-2d04-4768-98c4-8cda740375a9",
+                "name": "content_html",
+                "value": "={{ $('Apply Blaze Blog Layout + Rich Styling').first().json.message?.content || $('Parse AI JSON — Extract Post Content').first().json.blog_post }}\n",
+                "type": "string"
+              },
+              {
+                "id": "69a31d2e-0465-4c20-9156-a0de1150851e",
+                "name": "blog_id",
+                "value": "={{ $json.id }}",
+                "type": "number"
+              },
+              {
+                "id": "17b1e499-4103-4a7e-8e31-ed6031066b90",
+                "name": "mysql_id",
+                "value": "={{ $('DB Insert — Save Article Record').first().json.id }}",
+                "type": "string"
+              },
+              {
+                "id": "4ef13bb1-f44f-4815-a825-4b2ede896e2b",
+                "name": "",
+                "value": "",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1072,
+          1136
+        ],
+        "id": "44663465-5f6e-43c2-8d1e-f1ae54b89492",
+        "name": "Merge Content + Metadata Before DB Write"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT *\nFROM blog_posts\nWHERE id = {{ $('Build AI Prompt for Article Generation').item.json.id }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          1024,
+          96
+        ],
+        "id": "6833dc28-9671-44fc-b257-56aa6790dc68",
+        "name": "DB Insert — Save Article Record",
+        "credentials": {
+          "mySql": {
+            "id": "a3LZuEERCY9MEIMg",
+            "name": "Blaze Marketing Connection"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 11 * * 1,3,5"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          32,
+          144
+        ],
+        "id": "55410868-7eb6-4766-8bcf-1575feb87908",
+        "name": "CRON — Automatic Article Generation Schedule"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Punchy + marketing-forward title optimizer for Blaze + AIOSEO\n\nfunction parseObject(val) {\n  if (!val) return {};\n  if (typeof val === 'string') {\n    try { return JSON.parse(val); } catch (e) { return {}; }\n  }\n  return val;\n}\n\nfunction capFirst(str) {\n  if (!str) return '';\n  return str.charAt(0).toUpperCase() + str.slice(1);\n}\n\nfunction titleCase(str) {\n  if (!str) return '';\n  return str\n    .split(' ')\n    .filter(Boolean)\n    .map(w => w[0].toUpperCase() + w.slice(1))\n    .join(' ');\n}\n\nfunction getAudienceFromPersona(personaRaw) {\n  const persona = (personaRaw || '').toLowerCase();\n\n  if (persona.includes('seller')) return 'Sellers';\n  if (persona.includes('owner')) return 'Owners';\n  if (persona.includes('landlord')) return 'Owners';\n  if (persona.includes('investor')) return 'Investors';\n  if (persona.includes('buyer')) return 'Buyers';\n  if (persona.includes('tenant') || persona.includes('renter')) return 'Renters';\n\n  return 'Homeowners';\n}\n\nfunction ensureTexasInKeyword(keyword) {\n  if (!keyword) return '';\n  const lower = keyword.toLowerCase();\n  if (lower.includes('texas')) return keyword;\n  // tack \"in Texas\" at the end if it's not already there\n  return keyword + ' in Texas';\n}\n\nfunction normalizeFocusKeyword(seo) {\n  // try several spots\n  return (\n    seo.seo_focus_keyword ||\n    seo.focus_keyword      ||\n    seo.focusKeyword      ||\n    ''\n  );\n}\n\nfunction buildOptions(focusKeywordRaw, audience) {\n  let fk = focusKeywordRaw.trim();\n  if (!fk) return [];\n\n  // Make sure Texas context is there\n  fk = ensureTexasInKeyword(fk);\n\n  // Ensure leading capital\n  const fkLead = capFirst(fk);\n\n  const options = [];\n\n  // Option 1 – primary, very punchy\n  options.push(`${fkLead}: What Every ${audience} MUST Know`);\n\n  // Option 2 – tension / overlooked angle\n  options.push(`${fkLead}: What Most ${audience} Overlook`);\n\n  // Option 3 – checklist framing\n  options.push(`${fkLead}: The Critical ${audience} Checklist`);\n\n  return options;\n}\n\nconst items = $input.all();\n\nreturn items.map(item => {\n  const json = item.json || {};\n\n  const seo = parseObject(json.seo);\n  const persona = seo.persona || json.persona || null;\n\n  const audience = getAudienceFromPersona(persona);\n  const focusKeywordRaw = normalizeFocusKeyword(seo);\n\n  let options = buildOptions(focusKeywordRaw, audience);\n\n  // Fallbacks if something is weird\n  if (!options.length) {\n    const base =\n      seo.title ||\n      seo.seo_title ||\n      json.title ||\n      'Real Estate Tips for the Texas Panhandle';\n\n    const cleanBase = base.replace(/\\s*\\|\\s*Blaze Real Estate.*/i, '').trim();\n\n    options = [\n      `${cleanBase}: What Every ${audience} MUST Know`,\n      `${cleanBase}: The Critical ${audience} Guide`,\n      `${cleanBase}: Proven Tips for ${audience}`\n    ];\n  }\n\n  const primaryTitle = options[0];\n  const altTitle1    = options[1] || null;\n  const altTitle2    = options[2] || null;\n\n  // Update seo object so downstream nodes (and SQL) see the new title\n  seo.seo_title = primaryTitle;\n\n  return {\n    json: {\n      ...json,\n      // keep seo as JSON string if that's how your next Set node expects it\n      seo,\n      title: primaryTitle,        // <- use this in your WP Create Post node\n      seo_title: primaryTitle,    // <- for AIOSEO/SQL if needed\n      alt_title_1: altTitle1,\n      alt_title_2: altTitle2\n    }\n  };\n});\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2736,
+          96
+        ],
+        "id": "faf7290f-f78b-41c4-b14e-fc3161624fd2",
+        "name": "AI SEO Title Optimization Pass"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "UPDATE blog_posts\nSET status = 'generating'\nWHERE id = {{ $json.id }} AND status = 'idea';\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          752,
+          96
+        ],
+        "id": "ff38632a-f092-4cda-8022-4b10fed2f988",
+        "name": "DB Fetch — Select Next Article to Generate",
+        "credentials": {
+          "mySql": {
+            "id": "a3LZuEERCY9MEIMg",
+            "name": "Blaze Marketing Connection"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "CALL pick_next_blog_post();",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          304,
+          80
+        ],
+        "id": "a0578208-8879-4a67-87aa-3f6eab45ea4c",
+        "name": "Load Next Topic from Queue",
+        "credentials": {
+          "mySql": {
+            "id": "a3LZuEERCY9MEIMg",
+            "name": "Blaze Marketing Connection"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "3lOlKyqbTgyTASI8",
+            "mode": "id",
+            "cachedResultUrl": "/workflow/3lOlKyqbTgyTASI8"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          2208,
+          1136
+        ],
+        "id": "357e49a5-09c8-4ab6-bd95-76cd200999eb",
+        "name": "Call 'WF__Notify__GoogleChat'"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "92f0c6ce-417a-484b-8fc9-98da60772c1c",
+                "name": "status",
+                "value": "success",
+                "type": "string"
+              },
+              {
+                "id": "74d67899-4841-4769-857a-34182a4825d4",
+                "name": "workflow_name",
+                "value": "={{ $workflow.name }}",
+                "type": "string"
+              },
+              {
+                "id": "97a581fd-c662-41ce-9711-1a1bc3f08ca9",
+                "name": "workflow_id",
+                "value": "={{ $workflow.id }}",
+                "type": "string"
+              },
+              {
+                "id": "1d10a085-8aa1-42af-ba3a-c84c89a673b0",
+                "name": "=execution_id",
+                "value": "={{ $execution.id }}",
+                "type": "string"
+              },
+              {
+                "id": "8c402a9b-0c22-4010-a597-ebc378f5b222",
+                "name": "mode",
+                "value": "={{ $execution.mode }}",
+                "type": "string"
+              },
+              {
+                "id": "ad049df6-21b3-4cf3-a723-188a0626e50d",
+                "name": "=execution_url",
+                "value": "={{ 'https://n8n.blzres.com/workflow/' + $workflow.id + '/executions/' + $execution.id }}",
+                "type": "string"
+              },
+              {
+                "id": "f49a3824-dba4-47d3-b0c7-916c8e1cfb98",
+                "name": "summary",
+                "value": "Complete",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1728,
+          1136
+        ],
+        "id": "ff7b6b28-4f78-4fda-9811-a79a33a5f369",
+        "name": "Build Notify Payload"
+      },
+      {
+        "parameters": {
+          "operation": "text",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.extractFromFile",
+        "typeVersion": 1.1,
+        "position": [
+          1712,
+          96
+        ],
+        "id": "4ca072b8-63ee-4369-b552-631fc11e361e",
+        "name": "Extract from File"
+      }
+    ],
+    "connections": {
+      "OpenAI Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Article Generator — Main Content",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build AI Prompt for Article Generation": {
+        "main": [
+          [
+            {
+              "node": "DB Fetch — Select Next Article to Generate",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Article Generator — Main Content": {
+        "main": [
+          [
+            {
+              "node": "Parse AI JSON — Extract Post Content",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Research Assistant — Fact Checking": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Article Generator — Main Content",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Topic Classifier — Categories & Tags": {
+        "main": [
+          [
+            {
+              "node": "Build WP Taxonomy IDs + Author Mapping",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI SEO Metadata Generator": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Topic Classifier — Categories & Tags",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Context Builder — “Blaze Brain” Memory": {
+        "main": [
+          [
+            {
+              "node": "AI Article Generator — Main Content",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Retrieve Relevant Blaze Brain Snippets": {
+        "main": [
+          [
+            {
+              "node": "Retrieve Attached Documents",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Retrieve Attached Documents": {
+        "main": [
+          [
+            {
+              "node": "Extract from File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build WP Taxonomy IDs + Author Mapping": {
+        "main": [
+          [
+            {
+              "node": "Build Image Prompts from SEO Topics",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Manual Run Trigger — Debug Only": {
+        "main": [
+          [
+            {
+              "node": "Load Next Topic from Queue",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Featured Image Generator": {
+        "main": [
+          [
+            {
+              "node": "Generate Unique Image Filenames (slug-based)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Image Prompts from SEO Topics": {
+        "main": [
+          [
+            {
+              "node": "Split Image Prompts into Individual Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Image ALT Text Writer": {
+        "main": [
+          [
+            {
+              "node": "Update ALT + Meta for Uploaded Media",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Secondary Content Enhancer (rewrite pass)": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Image ALT Text Writer",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Image Prompts into Individual Items": {
+        "main": [
+          [
+            {
+              "node": "AI Featured Image Generator",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "DB Update — Associate WP Media IDs": {
+        "main": [
+          [
+            {
+              "node": "Build Notify Payload",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse AI JSON — Extract Post Content": {
+        "main": [
+          [
+            {
+              "node": "AI SEO Title Optimization Pass",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Generate Unique Image Filenames (slug-based)": {
+        "main": [
+          [
+            {
+              "node": "Upload Images to WordPress Media Library",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upload Images to WordPress Media Library": {
+        "main": [
+          [
+            {
+              "node": "AI Image ALT Text Writer",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update ALT + Meta for Uploaded Media": {
+        "main": [
+          [
+            {
+              "node": "Collect Published Media URLs & GUIDs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Collect Published Media URLs & GUIDs": {
+        "main": [
+          [
+            {
+              "node": "Apply Blaze Blog Layout + Rich Styling",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Apply Blaze Blog Layout + Rich Styling": {
+        "main": [
+          [
+            {
+              "node": "Create WordPress Post via REST",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build SQL Insert Payload from WP + SEO": {
+        "main": [
+          [
+            {
+              "node": "DB Update — Associate WP Media IDs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create WordPress Post via REST": {
+        "main": [
+          [
+            {
+              "node": "Merge Content + Metadata Before DB Write",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge Content + Metadata Before DB Write": {
+        "main": [
+          [
+            {
+              "node": "Build SQL Insert Payload from WP + SEO",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "DB Insert — Save Article Record": {
+        "main": [
+          [
+            {
+              "node": "Retrieve Relevant Blaze Brain Snippets",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "CRON — Automatic Article Generation Schedule": {
+        "main": [
+          [
+            {
+              "node": "Load Next Topic from Queue",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI SEO Title Optimization Pass": {
+        "main": [
+          [
+            {
+              "node": "AI Topic Classifier — Categories & Tags",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "DB Fetch — Select Next Article to Generate": {
+        "main": [
+          [
+            {
+              "node": "DB Insert — Save Article Record",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Load Next Topic from Queue": {
+        "main": [
+          [
+            {
+              "node": "Build AI Prompt for Article Generation",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Notify Payload": {
+        "main": [
+          [
+            {
+              "node": "Call 'WF__Notify__GoogleChat'",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract from File": {
+        "main": [
+          [
+            {
+              "node": "AI Context Builder — “Blaze Brain” Memory",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Brandon Stewart",
+    "name": "Version 9bc6ee0e",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}
