@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-04T15:47:16.117Z",
+  "updatedAt": "2026-05-11T20:56:31.908Z",
   "createdAt": "2026-04-22T17:02:21.504Z",
   "id": "hqovXTw8meebPsjT",
   "name": "WMMA Meeting Processing",
@@ -105,14 +105,14 @@
     },
     {
       "parameters": {
-        "jsCode": "const meeting = $('Validate Meeting Payload').item.json;\n\n// Pull from Expand Actions (the last place real rows exist)\nconst actionItems = $('Expand Actions').all().map(i => {\n  const a = i.json;\n\n  return {\n    action_description: a.action_description,\n    action_owner: a.action_owner,\n    due_date: a.due_date,\n    property_name: a.property_name\n  };\n});\n\nreturn [{\n  json: {\n    success: true,\n    meeting_id: meeting.id,\n    manager_name: meeting.manager_name,\n    meeting_datetime: meeting.meeting_datetime,\n    week_reference: meeting.week_reference,\n    summary_structured: meeting.summary_structured,\n    actions: actionItems,\n    action_count: actionItems.length\n  }\n}];"
+        "jsCode": "const meeting = $('Validate Meeting Payload').item.json;\n\nconst actionItems = $('Expand Actions').all().map(i => {\n  const a = i.json;\n\n  return {\n    action_description: a.action_description,\n    action_owner: a.action_owner,\n    due_date: a.due_date,\n    property_name: a.property_name\n  };\n});\n\nreturn [{\n  json: {\n    success: true,\n    ok: true,\n    source_doc_id: meeting.drive_file_id,\n    source_doc_name: meeting.source_title || null,\n    meeting_id: meeting.id,\n    manager_name: meeting.manager_name,\n    meeting_datetime: meeting.meeting_datetime,\n    week_reference: meeting.week_reference,\n    summary_structured: meeting.summary_structured,\n    actions: actionItems,\n    action_count: actionItems.length\n  }\n}];"
       },
       "id": "1853d413-3bf8-4a4a-b3da-290b6a5f119d",
       "name": "Build Success Summary",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2272,
+        2240,
         144
       ]
     },
@@ -174,8 +174,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        2496,
-        144
+        2512,
+        0
       ],
       "id": "0b438aab-0459-4e29-9574-9f55003a995b",
       "name": "Call 'WMMA Post-Meeting Follow-Up'"
@@ -289,16 +289,15 @@
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false,
     "timeSavedPerExecution": 20,
-    "errorWorkflow": "3WJZrZsLJqgg1EIM",
-    "saveDataSuccessExecution": "none"
+    "errorWorkflow": "3WJZrZsLJqgg1EIM"
   },
   "staticData": null,
   "meta": {
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "7c331d2d-91e8-4b77-987f-da29d04767d5",
-  "activeVersionId": "7c331d2d-91e8-4b77-987f-da29d04767d5",
+  "versionId": "5be22eb6-3d8a-4f35-a77f-93fe32fa660a",
+  "activeVersionId": "5be22eb6-3d8a-4f35-a77f-93fe32fa660a",
   "triggerCount": 0,
   "shared": [
     {
@@ -310,9 +309,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-05-04T15:39:56.734Z",
-    "createdAt": "2026-05-04T15:33:24.125Z",
-    "versionId": "7c331d2d-91e8-4b77-987f-da29d04767d5",
+    "updatedAt": "2026-05-11T20:54:49.347Z",
+    "createdAt": "2026-05-11T20:54:45.607Z",
+    "versionId": "5be22eb6-3d8a-4f35-a77f-93fe32fa660a",
     "workflowId": "hqovXTw8meebPsjT",
     "nodes": [
       {
@@ -414,14 +413,14 @@
       },
       {
         "parameters": {
-          "jsCode": "const meeting = $('Validate Meeting Payload').item.json;\n\n// Pull from Expand Actions (the last place real rows exist)\nconst actionItems = $('Expand Actions').all().map(i => {\n  const a = i.json;\n\n  return {\n    action_description: a.action_description,\n    action_owner: a.action_owner,\n    due_date: a.due_date,\n    property_name: a.property_name\n  };\n});\n\nreturn [{\n  json: {\n    success: true,\n    meeting_id: meeting.id,\n    manager_name: meeting.manager_name,\n    meeting_datetime: meeting.meeting_datetime,\n    week_reference: meeting.week_reference,\n    summary_structured: meeting.summary_structured,\n    actions: actionItems,\n    action_count: actionItems.length\n  }\n}];"
+          "jsCode": "const meeting = $('Validate Meeting Payload').item.json;\n\nconst actionItems = $('Expand Actions').all().map(i => {\n  const a = i.json;\n\n  return {\n    action_description: a.action_description,\n    action_owner: a.action_owner,\n    due_date: a.due_date,\n    property_name: a.property_name\n  };\n});\n\nreturn [{\n  json: {\n    success: true,\n    ok: true,\n    source_doc_id: meeting.drive_file_id,\n    source_doc_name: meeting.source_title || null,\n    meeting_id: meeting.id,\n    manager_name: meeting.manager_name,\n    meeting_datetime: meeting.meeting_datetime,\n    week_reference: meeting.week_reference,\n    summary_structured: meeting.summary_structured,\n    actions: actionItems,\n    action_count: actionItems.length\n  }\n}];"
         },
         "id": "1853d413-3bf8-4a4a-b3da-290b6a5f119d",
         "name": "Build Success Summary",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          2272,
+          2240,
           144
         ]
       },
@@ -483,8 +482,8 @@
         "type": "n8n-nodes-base.executeWorkflow",
         "typeVersion": 1.3,
         "position": [
-          2496,
-          144
+          2512,
+          0
         ],
         "id": "0b438aab-0459-4e29-9574-9f55003a995b",
         "name": "Call 'WMMA Post-Meeting Follow-Up'"
@@ -592,7 +591,7 @@
       }
     },
     "authors": "Brandon Stewart",
-    "name": "Version 7c331d2d",
+    "name": "Version 5be22eb6",
     "description": "",
     "autosaved": true
   },
