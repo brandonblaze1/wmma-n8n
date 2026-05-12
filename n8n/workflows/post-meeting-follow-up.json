@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-04T15:40:42.247Z",
+  "updatedAt": "2026-05-11T20:56:14.668Z",
   "createdAt": "2026-04-23T12:41:36.076Z",
   "id": "4P1nQHSRPUnnwbpy",
   "name": "WMMA Post-Meeting Follow-Up",
@@ -107,7 +107,7 @@
     "binaryMode": "separate",
     "timeSavedMode": "fixed",
     "errorWorkflow": "3WJZrZsLJqgg1EIM",
-    "saveDataSuccessExecution": "none",
+    "saveDataSuccessExecution": "all",
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false,
     "timeSavedPerExecution": 5
