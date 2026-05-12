@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-05T17:00:37.072Z",
+  "updatedAt": "2026-05-11T20:54:22.682Z",
   "createdAt": "2026-04-22T16:22:41.279Z",
   "id": "WFBtaAHdgBUqkE4q",
   "name": "WMMA Notes Intake",
@@ -7,14 +7,23 @@
   "isArchived": false,
   "nodes": [
     {
-      "parameters": {},
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "custom",
+              "cronExpression": "0 * * * 1,2"
+            }
+          ]
+        }
+      },
       "id": "80f3ef46-dd8a-4b2f-9697-593fe4239a81",
       "name": "Cron",
       "type": "n8n-nodes-base.cron",
       "typeVersion": 1,
       "position": [
-        176,
-        80
+        128,
+        -112
       ]
     },
     {
@@ -41,8 +50,8 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        464,
-        80
+        352,
+        -112
       ],
       "credentials": {
         "googleDriveOAuth2Api": {
@@ -60,22 +69,24 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1232,
-        64
+        1680,
+        -112
       ]
     },
     {
       "parameters": {
         "workflowId": "hqovXTw8meebPsjT",
-        "options": {}
+        "options": {
+          "waitForSubWorkflow": true
+        }
       },
       "id": "5f06b232-c96e-4842-b7c6-b17d2ed23b6f",
       "name": "Send to Meeting Processing",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        1648,
-        64
+        1904,
+        -112
       ]
     },
     {
@@ -87,8 +98,8 @@
       "type": "n8n-nodes-base.googleDocs",
       "typeVersion": 2,
       "position": [
-        656,
-        -48
+        1024,
+        -192
       ],
       "id": "4363dca8-722d-42e9-aac4-a9cfa3d7c621",
       "name": "Get a document",
@@ -108,8 +119,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1056,
-        64
+        1456,
+        -112
       ]
     },
     {
@@ -121,11 +132,104 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        848,
-        64
+        1232,
+        -112
       ],
       "id": "1b71b088-04ed-48f7-b96b-85ad0e7263d5",
       "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d317eb54-b8fe-4198-abea-e63b0beac02f",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": "Notes by Gemini",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        512,
+        -176
+      ],
+      "id": "865f4c3b-e0d8-447f-9baf-6ac123170448",
+      "name": "Filter WMMA Notes Only"
+    },
+    {
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\n\nif (!staticData.processed_wmma_doc_ids) {\n  staticData.processed_wmma_doc_ids = {};\n}\n\nconst output = [];\n\nfor (const item of $input.all()) {\n  const docId = item.json.id;\n  const name = item.json.name || '';\n\n  if (!docId) continue;\n\n  if (staticData.processed_wmma_doc_ids[docId]) {\n    continue;\n  }\n\n  // Only mark it as candidate here.\n  // We will permanently mark it after successful processing.\n  output.push({\n    json: {\n      ...item.json,\n      google_doc_id: docId,\n      google_doc_name: name\n    }\n  });\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        -176
+      ],
+      "id": "19361077-d013-43c1-b73a-3f03a578636c",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1733caab-de92-404f-8c06-786064ad81b6",
+              "leftValue": "=={{ $json.success === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2112,
+        -112
+      ],
+      "id": "eeb9f6b3-fd8e-4b64-a659-2900482d20db",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\n\nif (!staticData.processed_wmma_doc_ids) {\n  staticData.processed_wmma_doc_ids = {};\n}\n\nfor (const item of $input.all()) {\n  if (item.json.success !== true && item.json.ok !== true) {\n    continue;\n  }\n\n  const docId =\n    item.json.source_doc_id ||\n    item.json.google_doc_id ||\n    item.json.drive_file_id ||\n    item.json.document_id;\n\n  if (!docId) {\n    throw new Error('Processing succeeded but no source_doc_id / drive_file_id was returned.');\n  }\n\n  staticData.processed_wmma_doc_ids[docId] = {\n    processed_at: new Date().toISOString(),\n    name: item.json.source_doc_name || item.json.google_doc_name || null,\n    meeting_id: item.json.meeting_id || null,\n    action_count: item.json.action_count ?? null\n  };\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2368,
+        -192
+      ],
+      "id": "c9cdc265-0803-4983-ad21-d9e001f5d51f",
+      "name": "Code in JavaScript1"
     }
   ],
   "connections": {
@@ -144,14 +248,9 @@
       "main": [
         [
           {
-            "node": "Get a document",
+            "node": "Filter WMMA Notes Only",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 1
           }
         ]
       ]
@@ -199,6 +298,55 @@
           }
         ]
       ]
+    },
+    "Filter WMMA Notes Only": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Get a document",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Send to Meeting Processing": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -211,13 +359,17 @@
     "availableInMCP": false,
     "timeSavedPerExecution": 20
   },
-  "staticData": null,
+  "staticData": {
+    "global": {
+      "processed_wmma_doc_ids": {}
+    }
+  },
   "meta": {
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "e2b783f7-a74b-4eaf-a33a-10aad82271e2",
-  "activeVersionId": "50c61f9f-27f8-43aa-86ed-a78f127be79b",
+  "versionId": "f432fac6-2a1e-4e13-8893-dcbe445de60b",
+  "activeVersionId": "f432fac6-2a1e-4e13-8893-dcbe445de60b",
   "triggerCount": 1,
   "shared": [
     {
@@ -229,20 +381,29 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-04-29T15:52:19.904Z",
-    "createdAt": "2026-04-29T02:20:56.721Z",
-    "versionId": "50c61f9f-27f8-43aa-86ed-a78f127be79b",
+    "updatedAt": "2026-05-11T20:54:25.898Z",
+    "createdAt": "2026-05-11T20:54:22.685Z",
+    "versionId": "f432fac6-2a1e-4e13-8893-dcbe445de60b",
     "workflowId": "WFBtaAHdgBUqkE4q",
     "nodes": [
       {
-        "parameters": {},
+        "parameters": {
+          "triggerTimes": {
+            "item": [
+              {
+                "mode": "custom",
+                "cronExpression": "0 * * * 1,2"
+              }
+            ]
+          }
+        },
         "id": "80f3ef46-dd8a-4b2f-9697-593fe4239a81",
         "name": "Cron",
         "type": "n8n-nodes-base.cron",
         "typeVersion": 1,
         "position": [
-          256,
-          80
+          128,
+          -112
         ]
       },
       {
@@ -269,8 +430,8 @@
         "type": "n8n-nodes-base.googleDrive",
         "typeVersion": 3,
         "position": [
-          464,
-          80
+          352,
+          -112
         ],
         "credentials": {
           "googleDriveOAuth2Api": {
@@ -288,22 +449,24 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1232,
-          64
+          1680,
+          -112
         ]
       },
       {
         "parameters": {
           "workflowId": "hqovXTw8meebPsjT",
-          "options": {}
+          "options": {
+            "waitForSubWorkflow": true
+          }
         },
         "id": "5f06b232-c96e-4842-b7c6-b17d2ed23b6f",
         "name": "Send to Meeting Processing",
         "type": "n8n-nodes-base.executeWorkflow",
         "typeVersion": 1,
         "position": [
-          1648,
-          64
+          1904,
+          -112
         ]
       },
       {
@@ -315,8 +478,8 @@
         "type": "n8n-nodes-base.googleDocs",
         "typeVersion": 2,
         "position": [
-          656,
-          -48
+          1024,
+          -192
         ],
         "id": "4363dca8-722d-42e9-aac4-a9cfa3d7c621",
         "name": "Get a document",
@@ -336,8 +499,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1056,
-          64
+          1456,
+          -112
         ]
       },
       {
@@ -349,11 +512,104 @@
         "type": "n8n-nodes-base.merge",
         "typeVersion": 3.2,
         "position": [
-          848,
-          64
+          1232,
+          -112
         ],
         "id": "1b71b088-04ed-48f7-b96b-85ad0e7263d5",
         "name": "Merge"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "d317eb54-b8fe-4198-abea-e63b0beac02f",
+                "leftValue": "={{ $json.name }}",
+                "rightValue": "Notes by Gemini",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          512,
+          -176
+        ],
+        "id": "865f4c3b-e0d8-447f-9baf-6ac123170448",
+        "name": "Filter WMMA Notes Only"
+      },
+      {
+        "parameters": {
+          "jsCode": "const staticData = $getWorkflowStaticData('global');\n\nif (!staticData.processed_wmma_doc_ids) {\n  staticData.processed_wmma_doc_ids = {};\n}\n\nconst output = [];\n\nfor (const item of $input.all()) {\n  const docId = item.json.id;\n  const name = item.json.name || '';\n\n  if (!docId) continue;\n\n  if (staticData.processed_wmma_doc_ids[docId]) {\n    continue;\n  }\n\n  // Only mark it as candidate here.\n  // We will permanently mark it after successful processing.\n  output.push({\n    json: {\n      ...item.json,\n      google_doc_id: docId,\n      google_doc_name: name\n    }\n  });\n}\n\nreturn output;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          720,
+          -176
+        ],
+        "id": "19361077-d013-43c1-b73a-3f03a578636c",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "1733caab-de92-404f-8c06-786064ad81b6",
+                "leftValue": "=={{ $json.success === true }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          2112,
+          -112
+        ],
+        "id": "eeb9f6b3-fd8e-4b64-a659-2900482d20db",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "jsCode": "const staticData = $getWorkflowStaticData('global');\n\nif (!staticData.processed_wmma_doc_ids) {\n  staticData.processed_wmma_doc_ids = {};\n}\n\nfor (const item of $input.all()) {\n  if (item.json.success !== true && item.json.ok !== true) {\n    continue;\n  }\n\n  const docId =\n    item.json.source_doc_id ||\n    item.json.google_doc_id ||\n    item.json.drive_file_id ||\n    item.json.document_id;\n\n  if (!docId) {\n    throw new Error('Processing succeeded but no source_doc_id / drive_file_id was returned.');\n  }\n\n  staticData.processed_wmma_doc_ids[docId] = {\n    processed_at: new Date().toISOString(),\n    name: item.json.source_doc_name || item.json.google_doc_name || null,\n    meeting_id: item.json.meeting_id || null,\n    action_count: item.json.action_count ?? null\n  };\n}\n\nreturn $input.all();"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2368,
+          -192
+        ],
+        "id": "c9cdc265-0803-4983-ad21-d9e001f5d51f",
+        "name": "Code in JavaScript1"
       }
     ],
     "connections": {
@@ -372,14 +628,9 @@
         "main": [
           [
             {
-              "node": "Get a document",
+              "node": "Filter WMMA Notes Only",
               "type": "main",
               "index": 0
-            },
-            {
-              "node": "Merge",
-              "type": "main",
-              "index": 1
             }
           ]
         ]
@@ -427,10 +678,59 @@
             }
           ]
         ]
+      },
+      "Filter WMMA Notes Only": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Get a document",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Send to Meeting Processing": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Brandon Stewart",
-    "name": "Version 50c61f9f",
+    "name": "Version f432fac6",
     "description": "",
     "autosaved": true
   },
